@@ -15,7 +15,7 @@ Alternatives to this library include:
 
 - The [[http://www.boost.org/doc/libs/release/libs/iostreams/][Boost IOStreams]] library. The library does not auto-detect input compression (by default, though that can be easily implemented with filters), and more importantly, it is not a header-only Boost library.
 
-For an example usage, see [[examples/zc.cpp]].
+For an example usage, see [[examples/zpipe.cpp]].
 
 **** Input Auto-detection
 
