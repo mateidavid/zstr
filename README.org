@@ -1,11 +1,17 @@
 # -*- mode:org; mode:visual-line; coding:utf-8; -*-
 ** Header-only C++ IOStream Wrapper for ZLib
 
-This library enables the use of C++ standard iostreams to access ZLib-compressed files.
+This library enables the use of C++ standard iostreams to access ZLib-compressed streams. For input access, compression format is autodetected. Currently, only input access is implemented.
 
-Currently, only input access is implemented.
+Alternatives to this library include:
 
-*** Input Auto-detection
+- The original [[http://www.zlib.net/][ZLib]], through its [[http://www.zlib.net/manual.html][C API]]. This does not interact nicely with C++ iostreams.
+
+- The [[http://www.cs.unc.edu/Research/compgeom/gzstream/][GZStream]] library. This library does not autodetect input compression, and it cannot wrap streams (only files).
+
+- The [[http://www.boost.org/doc/libs/release/libs/iostreams/][Boost IOStreams]] library. The library does not autodetect input compression (by default, though that can be easily implemented with filters), and more importantly, it is not a header-only Boost library.
+
+**** Input Auto-detection
 
 For input access, the library seamlessly auto-detects whether the source stream is compressed or not. The following compressed streams are detected:
 
