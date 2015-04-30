@@ -1,5 +1,5 @@
 # -*- mode:org; mode:visual-line; coding:utf-8; -*-
-** Header-only C++ IOStream Wrapper for ZLib
+** A C++ header-only library for wrapping ZLib streams into Standard Library streams
 
 This library enables the use of C++ standard iostreams to access ZLib-compressed streams.
 
