@@ -1,5 +1,5 @@
 # -*- mode:org; mode:visual-line; coding:utf-8; -*-
-** A C++ ZLib wrapper
+** zstr: A C++ ZLib wrapper
 
 This C++ header-only library enables the use of C++ standard iostreams to access ZLib-compressed streams.
 
