@@ -2,13 +2,17 @@
 #include <string>
 #include "zstr.hpp"
 
-
 int main(int argc, char * argv[])
 {
+    //
     // turn on error reporting
+    //
     std::cin.exceptions(std::ifstream::badbit);
     std::cout.exceptions(std::ifstream::badbit);
+    //
     // construct input zstream
+    // (only 1 of 3 possible ways will be used)
+    //
     std::istream * is_p = nullptr;
     zstr::streambuf * zsbuf_p = nullptr;
     if (argc > 1 and std::string(argv[1]) == "-1")
@@ -29,7 +33,9 @@ int main(int argc, char * argv[])
     }
     assert(is_p);
     is_p->exceptions(std::ifstream::badbit);
+    //
     // main loop
+    //
     const std::streamsize buff_size = 1 << 16;
     char * buff = new char [buff_size];
     while (true)
@@ -40,7 +46,9 @@ int main(int argc, char * argv[])
         std::cout.write(buff, cnt);
     }
     delete [] buff;
+    //
     // deallocate std::istream and zstr::streambuf (if allocated)
+    //
     delete is_p;
     if (zsbuf_p) delete zsbuf_p;
 }
