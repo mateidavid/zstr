@@ -1,0 +1,16 @@
+# -*- mode:org; mode:visual-line; coding:utf-8; -*-
+** Header-only C++ IOStream Wrapper for ZLib
+
+This library enables the use of C++ standard iostreams to access ZLib-compressed files.
+
+Currently, only input access is implemented.
+
+*** Input Auto-detection
+
+For input access, the library seamlessly auto-detects whether the source stream is compressed or not. The following compressed streams are detected:
+
+- GZip header, when stream starts with =1F 8B=.
+
+- ZLib header, when stream starts with =78 01=, =78 9C=, and =78 DA=.
+
+If none of these formats are detected, the library assumes the input is not compressed, and it produces a copy of the source stream.
