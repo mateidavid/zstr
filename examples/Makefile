@@ -15,4 +15,5 @@ test: zc
 	diff -q zc.cpp <(gzip -9 <zc.cpp | ./zc)
 	diff -q <(cat zc.cpp zc.cpp) <(cat zc.cpp zc.cpp | gzip | ./zc)
 	diff -q <(cat zc.cpp zc.cpp) <({ gzip <zc.cpp; gzip <zc.cpp; } | ./zc)
+	diff -q <(<zc.cpp | gzip) <(<zc.cpp | gzip | gzip | ./zc)
 	@echo "all passed"
