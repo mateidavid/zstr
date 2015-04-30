@@ -1,9 +1,9 @@
 # -*- mode:org; mode:visual-line; coding:utf-8; -*-
-** A C++ header-only library for wrapping ZLib streams into Standard Library streams
+** A C++ ZLib wrapper
 
-This library enables the use of C++ standard iostreams to access ZLib-compressed streams.
+This C++ header-only library enables the use of C++ standard iostreams to access ZLib-compressed streams.
 
-For input access, compression format is auto-detected, and multiple concatenated streams are decompressed samelessly.
+For input access (decompression), the compression format is auto-detected, and multiple concatenated compressed streams are decompressed seamlessly.
 
 Currently, only input access is implemented.
 
