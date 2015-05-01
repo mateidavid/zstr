@@ -1,3 +1,8 @@
+//---------------------------------------------------------
+// Copyright 2015 Ontario Institute for Cancer Research
+// Written by Matei David (matei@cs.toronto.edu)
+//---------------------------------------------------------
+
 // Reference:
 // http://stackoverflow.com/questions/14086417/how-to-write-custom-input-stream-in-c
 
@@ -42,7 +47,7 @@ public:
         }
         _msg += zstrm_p->msg;
     }
-    const char* what() const noexcept { return _msg.c_str(); }
+    const char * what() const noexcept { return _msg.c_str(); }
 private:
     std::string _msg;
 }; // class Exception
