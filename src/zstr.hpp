@@ -200,7 +200,8 @@ private:
     static const std::streamsize default_buff_size = 1 << 20;
 }; // class streambuf
 
-class istream: public std::istream
+class istream
+    : public std::istream
 {
 public:
     istream(std::istream & is) :
@@ -219,6 +220,43 @@ public:
         delete rdbuf();
     }
 }; // class istream
+
+namespace detail
+{
+
+struct filebuf_holder
+{
+    filebuf_holder(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in)
+    {
+        _fb.open(filename, mode);
+    }
+    std::filebuf _fb;
+}; // class filebuf_holder
+
+} // namespace detail
+
+
+class ifstream
+    : private detail::filebuf_holder,
+      public std::istream
+{
+public:
+    explicit ifstream(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in)
+        : detail::filebuf_holder(filename, mode),
+          std::istream(new streambuf(&this->_fb))
+    {}
+
+    ifstream(const ifstream &) = delete;
+    ifstream(ifstream &&) = default;
+    ifstream & operator = (const ifstream &) = delete;
+    ifstream & operator = (ifstream &&) = default;
+
+    virtual ~ifstream()
+    {
+        if (rdbuf()) delete rdbuf();
+    }
+
+};
 
 } // namespace zstr
 
