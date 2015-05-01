@@ -2,12 +2,14 @@ SHELL := /bin/bash
 
 .PHONY: all test clean
 
-all: zpipe
+all: zpipe ztxtpipe
 
-zpipe: zpipe.cpp
+%: %.cpp
 	g++ -std=c++11 -O0 -g3 -ggdb -fno-eliminate-unused-debug-types -Wall -Wextra -pedantic -I../src -o $@ $^ -lz
 
-test: zpipe
+test: zpipe ztxtpipe
+	diff -q ztxtpipe.cpp <(./ztxtpipe <ztxtpipe.cpp)
+	diff -q ztxtpipe.cpp <(gzip <ztxtpipe.cpp | ./ztxtpipe)
 	diff -q zpipe.cpp <(./zpipe <zpipe.cpp)
 	diff -q zpipe.cpp <(./zpipe -1 <zpipe.cpp)
 	diff -q zpipe.cpp <(./zpipe -2 <zpipe.cpp)
@@ -19,4 +21,4 @@ test: zpipe
 	@echo "all passed"
 
 clean:
-	rm -rf zpipe
+	rm -rf zpipe ztxtpipe
