@@ -36,10 +36,6 @@ int main(int argc, char * argv[])
             is_p = new zstr::ifstream(argv[i]);
         }
         //
-        // Turn on error reporting (otherwise, zstream exceptions are hidden).
-        //
-        is_p->exceptions(std::ios_base::badbit);
-        //
         // Cat stream
         //
         cat_stream(*is_p, std::cout);

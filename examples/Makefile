@@ -30,4 +30,4 @@ test: ztxtpipe zpipe zc
 	@echo "all passed"
 
 clean:
-	rm -rf zpipe ztxtpipe
+	rm -rf ztxtpipe zpipe zc

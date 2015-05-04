@@ -15,7 +15,7 @@ Alternatives to this library include:
 
 - The [[http://www.boost.org/doc/libs/release/libs/iostreams/][Boost IOStreams]] library. The library does not auto-detect input compression (by default, though that can be easily implemented with filters), and more importantly, it is not a header-only Boost library.
 
-For an example usage, see [[examples/ztxtpipe.cpp]].
+For an example usage, see [[examples/ztxtpipe.cpp]] and [[examples/zc.cpp]].
 
 **** Input Auto-detection
 
@@ -26,3 +26,15 @@ For input access, the library seamlessly auto-detects whether the source stream 
 - ZLib header, when stream starts with =78 01=, =78 9C=, and =78 DA=. See [[http://stackoverflow.com/a/17176881][answer here]].
 
 If none of these formats are detected, the library assumes the input is not compressed, and it produces a plain copy of the source stream.
+
+**** Classes
+
+The package provides 3 classes for accessing ZLib streams:
+
+- =zstr::streambuf= is the core implementation class. This is constructed from an existing =std::streambuf= that contains source data. The =zstr::streambuf= constructor accepts explicit settings for the internal buffer size (default: 1 MB) and the auto-detection option (default: on). ZLib errors cause exceptions to be thrown.
+
+- =zstr::istream= is an =std::istream= wrapper for a =zstr::streambuf= that accesses an external =std::streambuf=. It can be constructed from an existing =std::istream= (such as =std::cin=) or =std::streambuf=.
+
+- =zstr::ifstream= is an =std::istream= wrapper for a =zstr::streambuf= that accesses an internal =std::ifstream=. This can be used to open a file and access it.
+
+For both =zstr::istream= and =zstr::ifstream=, the =badbit= of the expection mask is turned on in order to propagate exceptions.

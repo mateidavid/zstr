@@ -9,10 +9,6 @@ int main()
     //
     zstr::istream is(std::cin);
     //
-    // Turn on error reporting (otherwise, zstream exceptions are hidden).
-    //
-    is.exceptions(std::ios_base::badbit);
-    //
     // Main loop
     //
     std::string s;

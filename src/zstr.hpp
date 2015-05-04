@@ -13,6 +13,7 @@
 #include <fstream>
 #include <sstream>
 #include <zlib.h>
+#include <sys/stat.h>
 
 namespace zstr
 {
@@ -204,11 +205,17 @@ class istream
     : public std::istream
 {
 public:
-    istream(std::istream & is) :
-        std::istream(new streambuf(is.rdbuf())) {}
+    istream(std::istream & is)
+        : std::istream(new streambuf(is.rdbuf()))
+    {
+        exceptions(std::ios_base::badbit);
+    }
 
-    explicit istream(std::streambuf * sbuf_p) :
-        std::istream(new streambuf(sbuf_p)) {}
+    explicit istream(std::streambuf * sbuf_p)
+        : std::istream(new streambuf(sbuf_p))
+    {
+        exceptions(std::ios_base::badbit);
+    }
 
     istream(const istream &) = delete;
     istream(istream &&) = default;
@@ -228,7 +235,30 @@ struct filebuf_holder
 {
     filebuf_holder(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in)
     {
-        _fb.open(filename, mode);
+        struct stat st_buf;
+        int status = stat(filename.c_str(), &st_buf);
+        if (status != 0)
+        {
+            std::string msg;
+            msg += "zstr::ifstream error: ";
+            msg += filename;
+            perror(msg.c_str());
+            std::exit(EXIT_FAILURE);
+        }
+        else if (S_ISDIR(st_buf.st_mode))
+        {
+            std::cerr << "zstr::ifstream error: " << filename << ": is a directory" << std::endl;
+            std::exit(EXIT_FAILURE);
+        }
+        auto res = _fb.open(filename, mode);
+        if (not res)
+        {
+            std::string msg;
+            msg += "zstr::ifstream error: ";
+            msg += filename;
+            perror(msg.c_str());
+            std::exit(EXIT_FAILURE);
+        }
     }
     std::filebuf _fb;
 }; // class filebuf_holder
@@ -244,7 +274,9 @@ public:
     explicit ifstream(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in)
         : detail::filebuf_holder(filename, mode),
           std::istream(new streambuf(&this->_fb))
-    {}
+    {
+        exceptions(std::ios_base::badbit);
+    }
 
     ifstream(const ifstream &) = delete;
     ifstream(ifstream &&) = default;
