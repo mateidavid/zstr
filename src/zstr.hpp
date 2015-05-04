@@ -13,7 +13,7 @@
 #include <fstream>
 #include <sstream>
 #include <zlib.h>
-#include <sys/stat.h>
+#include "strict_fstream.hpp"
 
 namespace zstr
 {
@@ -210,18 +210,11 @@ public:
     {
         exceptions(std::ios_base::badbit);
     }
-
     explicit istream(std::streambuf * sbuf_p)
         : std::istream(new streambuf(sbuf_p))
     {
         exceptions(std::ios_base::badbit);
     }
-
-    istream(const istream &) = delete;
-    istream(istream &&) = default;
-    istream & operator = (const istream &) = delete;
-    istream & operator = (istream &&) = default;
-
     virtual ~istream()
     {
         delete rdbuf();
@@ -231,63 +224,32 @@ public:
 namespace detail
 {
 
-struct filebuf_holder
+struct strict_fstream_holder
 {
-    filebuf_holder(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in)
-    {
-        struct stat st_buf;
-        int status = stat(filename.c_str(), &st_buf);
-        if (status != 0)
-        {
-            std::string msg;
-            msg += "zstr::ifstream error: ";
-            msg += filename;
-            perror(msg.c_str());
-            std::exit(EXIT_FAILURE);
-        }
-        else if (S_ISDIR(st_buf.st_mode))
-        {
-            std::cerr << "zstr::ifstream error: " << filename << ": is a directory" << std::endl;
-            std::exit(EXIT_FAILURE);
-        }
-        auto res = _fb.open(filename, mode);
-        if (not res)
-        {
-            std::string msg;
-            msg += "zstr::ifstream error: ";
-            msg += filename;
-            perror(msg.c_str());
-            std::exit(EXIT_FAILURE);
-        }
-    }
-    std::filebuf _fb;
+    strict_fstream_holder(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in)
+        : _fs(filename, mode)
+    {}
+    strict_fstream::fstream _fs;
 }; // class filebuf_holder
 
 } // namespace detail
 
 
 class ifstream
-    : private detail::filebuf_holder,
+    : private detail::strict_fstream_holder,
       public std::istream
 {
 public:
     explicit ifstream(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in)
-        : detail::filebuf_holder(filename, mode),
-          std::istream(new streambuf(&this->_fb))
+        : detail::strict_fstream_holder(filename, mode),
+          std::istream(new streambuf(_fs.rdbuf()))
     {
         exceptions(std::ios_base::badbit);
     }
-
-    ifstream(const ifstream &) = delete;
-    ifstream(ifstream &&) = default;
-    ifstream & operator = (const ifstream &) = delete;
-    ifstream & operator = (ifstream &&) = default;
-
     virtual ~ifstream()
     {
         if (rdbuf()) delete rdbuf();
     }
-
 };
 
 } // namespace zstr

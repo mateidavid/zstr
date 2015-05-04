@@ -2,7 +2,7 @@ SHELL := /bin/bash
 
 .PHONY: all test clean
 
-all: ztxtpipe zpipe zc
+all: ztxtpipe zpipe zc test-strict_fstream
 
 %: %.cpp
 	g++ -std=c++11 -O0 -g3 -ggdb -fno-eliminate-unused-debug-types -Wall -Wextra -pedantic -I../src -o $@ $^ -lz
@@ -30,4 +30,4 @@ test: ztxtpipe zpipe zc
 	@echo "all passed"
 
 clean:
-	rm -rf ztxtpipe zpipe zc
+	rm -rf ztxtpipe zpipe zc test-strict_fstream
