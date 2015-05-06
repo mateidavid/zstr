@@ -60,30 +60,48 @@ class z_stream_wrapper
     : public z_stream
 {
 public:
-    z_stream_wrapper()
+    z_stream_wrapper(bool _is_input = true, int _level = Z_DEFAULT_COMPRESSION)
+        : is_input(_is_input)
     {
         this->zalloc = Z_NULL;
         this->zfree = Z_NULL;
         this->opaque = Z_NULL;
-        this->avail_in = 0;
-        this->next_in = Z_NULL;
-        int ret = inflateInit2(this, 15+32);
+        int ret;
+        if (is_input)
+        {
+            this->avail_in = 0;
+            this->next_in = Z_NULL;
+            ret = inflateInit2(this, 15+32);
+        }
+        else
+        {
+            ret = deflateInit2(this, _level, Z_DEFLATED, 15+16, 8, Z_DEFAULT_STRATEGY);
+        }
         if (ret != Z_OK) throw Exception(this, ret);
     }
     ~z_stream_wrapper()
     {
-        inflateEnd(this);
+        if (is_input)
+        {
+            inflateEnd(this);
+        }
+        else
+        {
+            deflateEnd(this);
+        }
     }
+private:
+    bool is_input;
 }; // class z_stream_wrapper
 
 } // namespace detail
 
-class streambuf
+class istreambuf
     : public std::streambuf
 {
 public:
-    streambuf(std::streambuf * _sbuf_p,
-              std::streamsize _buff_size = default_buff_size, bool _auto_detect = true)
+    istreambuf(std::streambuf * _sbuf_p,
+               std::streamsize _buff_size = default_buff_size, bool _auto_detect = true)
         : sbuf_p(_sbuf_p),
           zstrm_p(nullptr),
           buff_size(_buff_size),
@@ -99,12 +117,12 @@ public:
         setg(out_buff, out_buff, out_buff);
     }
 
-    streambuf(const streambuf &) = delete;
-    streambuf(streambuf &&) = default;
-    streambuf & operator = (const streambuf &) = delete;
-    streambuf & operator = (streambuf &&) = default;
+    istreambuf(const istreambuf &) = delete;
+    istreambuf(istreambuf &&) = default;
+    istreambuf & operator = (const istreambuf &) = delete;
+    istreambuf & operator = (istreambuf &&) = default;
 
-    virtual ~streambuf()
+    virtual ~istreambuf()
     {
         delete [] in_buff;
         delete [] out_buff;
@@ -155,7 +173,7 @@ public:
                 else
                 {
                     // run inflate() on input
-                    if (not zstrm_p) zstrm_p = new detail::z_stream_wrapper();
+                    if (not zstrm_p) zstrm_p = new detail::z_stream_wrapper(true);
                     zstrm_p->next_in = reinterpret_cast< decltype(zstrm_p->next_in) >(in_buff_start);
                     zstrm_p->avail_in = in_buff_end - in_buff_start;
                     zstrm_p->next_out = reinterpret_cast< decltype(zstrm_p->next_out) >(out_buff_free_start);
@@ -182,10 +200,9 @@ public:
             this->setg(out_buff, out_buff, out_buff_free_start);
         }
         return this->gptr() == this->egptr()
-            ? std::char_traits<char>::eof()
-            : std::char_traits<char>::to_int_type(*this->gptr());
+            ? traits_type::eof()
+            : traits_type::to_int_type(*this->gptr());
     }
-
 private:
     std::streambuf * sbuf_p;
     char * in_buff;
@@ -199,19 +216,115 @@ private:
     bool is_text;
 
     static const std::streamsize default_buff_size = 1 << 20;
-}; // class streambuf
+}; // class istreambuf
+
+class ostreambuf
+    : public std::streambuf
+{
+public:
+    ostreambuf(std::streambuf * _sbuf_p,
+               std::streamsize _buff_size = default_buff_size, int _level = Z_DEFAULT_COMPRESSION)
+        : sbuf_p(_sbuf_p),
+          zstrm_p(new detail::z_stream_wrapper(false, _level)),
+          buff_size(_buff_size),
+          level(_level)
+    {
+        assert(sbuf_p);
+        in_buff = new char [buff_size];
+        out_buff = new char [buff_size];
+        setp(in_buff, in_buff + buff_size);
+    }
+
+    ostreambuf(const ostreambuf &) = delete;
+    ostreambuf(ostreambuf &&) = default;
+    ostreambuf & operator = (const ostreambuf &) = delete;
+    ostreambuf & operator = (ostreambuf &&) = default;
+
+    int deflate_loop(int flush)
+    {
+        while (true)
+        {
+            zstrm_p->next_out = reinterpret_cast< decltype(zstrm_p->next_out) >(out_buff);
+            zstrm_p->avail_out = buff_size;
+            int ret = deflate(zstrm_p, flush);
+            if (ret != Z_OK and ret != Z_STREAM_END) throw Exception(zstrm_p, ret);
+            std::streamsize sz = sbuf_p->sputn(out_buff, reinterpret_cast< decltype(out_buff) >(zstrm_p->next_out) - out_buff);
+            if (sz != reinterpret_cast< decltype(out_buff) >(zstrm_p->next_out) - out_buff)
+            {
+                return -1;
+            }
+            if (ret == Z_STREAM_END or sz == 0)
+            {
+                break;
+            }
+        }
+        return 0;
+    }
+
+    virtual ~ostreambuf()
+    {
+        // flush the zlib stream
+        zstrm_p->next_in = nullptr;
+        zstrm_p->avail_in = 0;
+        int r = deflate_loop(Z_FINISH);
+        if (r != 0) abort();
+        delete [] in_buff;
+        delete [] out_buff;
+        delete zstrm_p;
+    }
+    virtual std::streambuf::int_type overflow(std::streambuf::int_type c = traits_type::eof())
+    {
+        zstrm_p->next_in = reinterpret_cast< decltype(zstrm_p->next_in) >(pbase());
+        zstrm_p->avail_in = pptr() - pbase();
+        while (zstrm_p->avail_in > 0)
+        {
+            int r = deflate_loop(Z_NO_FLUSH);
+            if (r != 0)
+            {
+                setp(nullptr, nullptr);
+                return traits_type::eof();
+            }
+        }
+        setp(in_buff, in_buff + buff_size);
+        return traits_type::eq_int_type(c, traits_type::eof()) ? traits_type::eof() : sputc(c);
+    }
+    virtual int sync()
+    {
+        // first, sync the base class (source stream)
+        if (std::streambuf::sync() != 0) return -1;
+        // next, call overflow to clear in_buff
+        std::streambuf::int_type c = overflow();
+        if (not pptr()) return -1;
+        // then, call deflate asking to sync zlib stream
+        zstrm_p->next_in = nullptr;
+        zstrm_p->avail_in = 0;
+        int r = deflate_loop(Z_SYNC_FLUSH);
+        if (r != 0) return -1;
+        // finally, sync the sink stream
+        if (sbuf_p->pubsync() != 0) return -1;
+    }
+private:
+    std::streambuf * sbuf_p;
+    char * in_buff;
+    char * out_buff;
+    detail::z_stream_wrapper * zstrm_p;
+    std::streamsize buff_size;
+    int level;
+
+    static const std::streamsize default_buff_size = 1 << 20;
+}; // class ostreambuf
 
 class istream
     : public std::istream
 {
 public:
     istream(std::istream & is)
-        : std::istream(new streambuf(is.rdbuf()))
+        : std::istream(new istreambuf(is.rdbuf()))
     {
         exceptions(std::ios_base::badbit);
     }
     explicit istream(std::streambuf * sbuf_p)
-        : std::istream(new streambuf(sbuf_p))
+        : std::istream(new istreambuf(sbuf_p))
     {
         exceptions(std::ios_base::badbit);
     }
@@ -224,25 +337,25 @@ public:
 namespace detail
 {
 
+template < typename FStream_Type >
 struct strict_fstream_holder
 {
     strict_fstream_holder(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in)
         : _fs(filename, mode)
     {}
-    strict_fstream::fstream _fs;
-}; // class filebuf_holder
+    FStream_Type _fs;
+}; // class strict_fstream_holder
 
 } // namespace detail
 
-
 class ifstream
-    : private detail::strict_fstream_holder,
+    : private detail::strict_fstream_holder< strict_fstream::ifstream >,
       public std::istream
 {
 public:
     explicit ifstream(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in)
-        : detail::strict_fstream_holder(filename, mode),
-          std::istream(new streambuf(_fs.rdbuf()))
+        : detail::strict_fstream_holder< strict_fstream::ifstream >(filename, mode),
+          std::istream(new istreambuf(_fs.rdbuf()))
     {
         exceptions(std::ios_base::badbit);
     }
@@ -250,7 +363,7 @@ public:
     {
         if (rdbuf()) delete rdbuf();
     }
-};
+}; // class ifstream
 
 } // namespace zstr
 

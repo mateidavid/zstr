@@ -8,7 +8,7 @@ int main()
     // Create explicit zstr::streambuf feeding off the streambuf of std::cin.
     // This syntax allows for setting the buffer size and the auto-detect option.
     //
-    zstr::streambuf zsbuf(std::cin.rdbuf(), 1<<16, true);
+    zstr::istreambuf zsbuf(std::cin.rdbuf(), 1<<16, true);
     //
     // Create an std::istream wrapper for the zstr::streambuf.
     // NOTE: A zstr::istream constructed with a zstr::streambuf parameter would decompress twice.
