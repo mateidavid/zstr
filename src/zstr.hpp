@@ -40,6 +40,9 @@ public:
         case Z_VERSION_ERROR:
             _msg += "Z_VERSION_ERROR: ";
             break;
+        case Z_BUF_ERROR:
+            _msg += "Z_BUF_ERROR: ";
+            break;
         default:
             std::ostringstream oss;
             oss << ret;
@@ -48,6 +51,7 @@ public:
         }
         _msg += zstrm_p->msg;
     }
+    Exception(const std::string msg) : _msg(msg) {}
     const char * what() const noexcept { return _msg.c_str(); }
 private:
     std::string _msg;
@@ -247,13 +251,14 @@ public:
             zstrm_p->next_out = reinterpret_cast< decltype(zstrm_p->next_out) >(out_buff);
             zstrm_p->avail_out = buff_size;
             int ret = deflate(zstrm_p, flush);
-            if (ret != Z_OK and ret != Z_STREAM_END) throw Exception(zstrm_p, ret);
+            if (ret != Z_OK and ret != Z_STREAM_END and ret != Z_BUF_ERROR) throw Exception(zstrm_p, ret);
             std::streamsize sz = sbuf_p->sputn(out_buff, reinterpret_cast< decltype(out_buff) >(zstrm_p->next_out) - out_buff);
             if (sz != reinterpret_cast< decltype(out_buff) >(zstrm_p->next_out) - out_buff)
             {
+                // there was an error in the sink stream
                 return -1;
             }
-            if (ret == Z_STREAM_END or sz == 0)
+            if (ret == Z_STREAM_END or ret == Z_BUF_ERROR or sz == 0)
             {
                 break;
             }
@@ -264,10 +269,7 @@ public:
     virtual ~ostreambuf()
     {
         // flush the zlib stream
-        zstrm_p->next_in = nullptr;
-        zstrm_p->avail_in = 0;
-        int r = deflate_loop(Z_FINISH);
-        if (r != 0) abort();
+        if (sync() != 0) throw Exception("~ostreambuf(): error in sink stream");
         delete [] in_buff;
         delete [] out_buff;
         delete zstrm_p;
@@ -290,18 +292,15 @@ public:
     }
     virtual int sync()
     {
-        // first, sync the base class (source stream)
-        if (std::streambuf::sync() != 0) return -1;
-        // next, call overflow to clear in_buff
+        // first, call overflow to clear in_buff
         std::streambuf::int_type c = overflow();
         if (not pptr()) return -1;
-        // then, call deflate asking to sync zlib stream
+        // then, call deflate asking to finish the zlib stream
         zstrm_p->next_in = nullptr;
         zstrm_p->avail_in = 0;
-        int r = deflate_loop(Z_SYNC_FLUSH);
-        if (r != 0) return -1;
-        // finally, sync the sink stream
-        if (sbuf_p->pubsync() != 0) return -1;
+        if (deflate_loop(Z_FINISH) != 0) return -1;
+        deflateReset(zstrm_p);
+        return 0;
     }
 private:
     std::streambuf * sbuf_p;
@@ -334,6 +333,26 @@ public:
     }
 }; // class istream
 
+class ostream
+    : public std::ostream
+{
+public:
+    ostream(std::ostream & os)
+        : std::ostream(new ostreambuf(os.rdbuf()))
+    {
+        exceptions(std::ios_base::badbit);
+    }
+    explicit ostream(std::streambuf * sbuf_p)
+        : std::ostream(new ostreambuf(sbuf_p))
+    {
+        exceptions(std::ios_base::badbit);
+    }
+    virtual ~ostream()
+    {
+        delete rdbuf();
+    }
+}; // class ostream
+
 namespace detail
 {
 
@@ -364,6 +383,23 @@ public:
         if (rdbuf()) delete rdbuf();
     }
 }; // class ifstream
+
+class ofstream
+    : private detail::strict_fstream_holder< strict_fstream::ofstream >,
+      public std::ostream
+{
+public:
+    explicit ofstream(const std::string& filename, std::ios_base::openmode mode = std::ios_base::out)
+        : detail::strict_fstream_holder< strict_fstream::ofstream >(filename, mode | std::ios_base::binary),
+          std::ostream(new ostreambuf(_fs.rdbuf()))
+    {
+        exceptions(std::ios_base::badbit);
+    }
+    virtual ~ofstream()
+    {
+        if (rdbuf()) delete rdbuf();
+    }
+}; // class ofstream
 
 } // namespace zstr
 

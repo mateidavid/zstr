@@ -5,7 +5,7 @@ This C++ header-only library enables the use of C++ standard iostreams to access
 
 For input access (decompression), the compression format is auto-detected, and multiple concatenated compressed streams are decompressed seamlessly.
 
-Currently, only input access is implemented.
+For output access (compression), the only parameter exposed by this API is the compression level.
 
 Alternatives to this library include:
 
@@ -29,12 +29,18 @@ If none of these formats are detected, the library assumes the input is not comp
 
 **** Classes
 
-The package provides 3 classes for accessing ZLib streams:
+The package provides 6 classes for accessing ZLib streams:
 
-- =zstr::streambuf= is the core implementation class. This is constructed from an existing =std::streambuf= that contains source data. The =zstr::streambuf= constructor accepts explicit settings for the internal buffer size (default: 1 MB) and the auto-detection option (default: on). ZLib errors cause exceptions to be thrown.
+- =zstr::istreambuf= is the core decompression class. This is constructed from an existing =std::streambuf= that contains source data. The =zstr::istreambuf= constructor accepts explicit settings for the internal buffer size (default: 1 MB) and the auto-detection option (default: on). ZLib errors cause exceptions to be thrown.
 
-- =zstr::istream= is an =std::istream= wrapper for a =zstr::streambuf= that accesses an external =std::streambuf=. It can be constructed from an existing =std::istream= (such as =std::cin=) or =std::streambuf=.
+- =zstr::ostreambuf= is the core compression class. This is constructed from an existing =std::streambuf= that contains sink data. The =zstr::ostreambuf= constructor accepts explicit settings for the internal buffer size (default: 1 MB) and the compression option (default: ZLib default). ZLib errors cause exceptions to be thrown.
 
-- =zstr::ifstream= is an =std::istream= wrapper for a =zstr::streambuf= that accesses an internal =std::ifstream=. This can be used to open a file and access it.
+- =zstr::istream= is a wrapper for a =zstr::istreambuf= that accesses an /external/ =std::streambuf=. It can be constructed from an existing =std::istream= (such as =std::cin=) or =std::streambuf=.
 
-For both =zstr::istream= and =zstr::ifstream=, the =badbit= of the expection mask is turned on in order to propagate exceptions.
+- =zstr::ostream= is a wrapper for a =zstr::ostreambuf= that accesses an /external/ =std::streambuf=. It can be constructed from an existing =std::ostream= (such as =std::cout=) or =std::streambuf=.
+
+- =zstr::ifstream= is a wrapper for a =zstr::istreambuf= that accesses an /internal/ =std::ifstream=. This can be used to open a file and read decompressed data from it.
+
+- =zstr::ofstream= is a wrapper for a =zstr::ostreambuf= that accesses an /internal/ =std::ofstream=. This can be used to open a file and write compressed data to it.
+
+All stream objects the =badbit= of the expection mask is turned on in order to propagate exceptions.

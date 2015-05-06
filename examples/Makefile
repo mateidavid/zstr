@@ -27,6 +27,16 @@ test: ztxtpipe zpipe zc
 	diff -q zc.cpp <(<zc.cpp gzip | ./zc -)
 	diff -q zc.cpp <(<zc.cpp gzip | ./zc - -)
 	diff -q zc.cpp <(./zc <(<zc.cpp gzip))
+	diff -q zc.cpp <(<zc.cpp ./zc -c | zcat)
+	diff -q zc.cpp <(<zc.cpp ./zc -c - | zcat)
+	diff -q zc.cpp <(<zc.cpp ./zc -c - - | zcat)
+	diff -q zc.cpp <(./zc -c zc.cpp | zcat)
+	diff -q <(cat zc.cpp zc.cpp) <(./zc -c zc.cpp - <zc.cpp | zcat)
+	diff -q <(cat zc.cpp zc.cpp) <(./zc -c - zc.cpp <zc.cpp | zcat)
+	diff -q <(cat zc.cpp zc.cpp) <(./zc -c zc.cpp zc.cpp | zcat)
+	diff -q <(cat zc.cpp zc.cpp) <({ ./zc -c zc.cpp; ./zc -c zc.cpp; } | zcat)
+	diff -q <(cat zc.cpp zc.cpp) <({ gzip <zc.cpp; ./zc -c zc.cpp; } | zcat)
+	diff -q <(cat zc.cpp zc.cpp) <({ ./zc -c zc.cpp; gzip <zc.cpp; } | zcat)
 	@echo "all passed"
 
 clean:
