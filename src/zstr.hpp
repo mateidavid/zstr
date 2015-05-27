@@ -230,8 +230,7 @@ public:
                std::streamsize _buff_size = default_buff_size, int _level = Z_DEFAULT_COMPRESSION)
         : sbuf_p(_sbuf_p),
           zstrm_p(new detail::z_stream_wrapper(false, _level)),
-          buff_size(_buff_size),
-          level(_level)
+          buff_size(_buff_size)
     {
         assert(sbuf_p);
         in_buff = new char [buff_size];
@@ -293,7 +292,7 @@ public:
     virtual int sync()
     {
         // first, call overflow to clear in_buff
-        std::streambuf::int_type c = overflow();
+        overflow();
         if (not pptr()) return -1;
         // then, call deflate asking to finish the zlib stream
         zstrm_p->next_in = nullptr;
@@ -308,7 +307,6 @@ private:
     char * out_buff;
     detail::z_stream_wrapper * zstrm_p;
     std::streamsize buff_size;
-    int level;
 
     static const std::streamsize default_buff_size = 1 << 20;
 }; // class ostreambuf
