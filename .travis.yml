@@ -1,0 +1,17 @@
+# travis.yml for github.com/mateidavid/zstr
+
+sudo: required
+
+services:
+    - docker
+
+before_install:
+    - sudo apt-get update -y
+    - sudo apt-get install -y -o Dpkg::Options::="--force-confnew" docker-engine
+    - TZ=$(cat /etc/timezone) USER_ID=$(id -u) USER_NAME=$(id -un) GROUP_ID=$(id -g) GROUP_NAME=$(id -gn) envsubst <.travis.Dockerfile.in | docker build -t zstr -
+
+install:
+    - docker run --rm -v $PWD:/data zstr make -C examples
+
+script:
+    - docker run --rm -v $PWD:/data zstr make -C examples test

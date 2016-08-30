@@ -1,5 +1,8 @@
 # -*- mode:org; mode:visual-line; coding:utf-8; -*-
-** zstr: A C++ ZLib wrapper
+
+** A C++ ZLib wrapper
+
+[[http://travis-ci.org/mateidavid/zstr][http://travis-ci.org/mateidavid/zstr.svg?branch=master]] [[https://tldrlegal.com/license/mit-license][http://img.shields.io/:license-mit-blue.svg]]
 
 This C++ header-only library enables the use of C++ standard iostreams to access ZLib-compressed streams.
 
@@ -43,4 +46,9 @@ The package provides 6 classes for accessing ZLib streams:
 
 - =zstr::ofstream= is a wrapper for a =zstr::ostreambuf= that accesses an /internal/ =std::ofstream=. This can be used to open a file and write compressed data to it.
 
-All stream objects the =badbit= of the expection mask is turned on in order to propagate exceptions.
+For all stream objects, the =badbit= of their expection mask is turned on in order to propagate exceptions.
+
+**** License
+
+Released under the [[file:LICENSE][MIT license]].
+

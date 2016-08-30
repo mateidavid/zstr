@@ -1,5 +1,7 @@
+.SUFFIXES:
+MAKEFLAGS += -r
 SHELL := /bin/bash
-
+.DELETE_ON_ERROR:
 .PHONY: all test clean
 
 all: test-strict_fstream ztxtpipe zpipe zc
