@@ -268,7 +268,14 @@ public:
     virtual ~ostreambuf()
     {
         // flush the zlib stream
-        if (sync() != 0) throw Exception("~ostreambuf(): error in sink stream");
+        //
+        // NOTE: Errors here (sync() return value not 0) are ignored, because we
+        // cannot throw in a destructor. This mirrors the behaviour of
+        // std::basic_filebuf::~basic_filebuf(). To see an exception on error,
+        // close the ofstream with an explicit call to close(), and do not rely
+        // on the implicit call in the destructor.
+        //
+        sync();
         delete [] in_buff;
         delete [] out_buff;
         delete zstrm_p;
