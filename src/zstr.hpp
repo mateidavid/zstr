@@ -114,10 +114,10 @@ public:
           is_text(false)
     {
         assert(sbuf_p);
-        in_buff = new char [buff_size];
+        in_buff = new char [(unsigned int) buff_size];
         in_buff_start = in_buff;
         in_buff_end = in_buff;
-        out_buff = new char [buff_size];
+        out_buff = new char [(unsigned int) buff_size];
         setg(out_buff, out_buff, out_buff);
     }
 
@@ -233,8 +233,8 @@ public:
           buff_size(_buff_size)
     {
         assert(sbuf_p);
-        in_buff = new char [buff_size];
-        out_buff = new char [buff_size];
+        in_buff = new char [(unsigned int) buff_size];
+        out_buff = new char [(unsigned int) buff_size];
         setp(in_buff, in_buff + buff_size);
     }
 
@@ -248,7 +248,7 @@ public:
         while (true)
         {
             zstrm_p->next_out = reinterpret_cast< decltype(zstrm_p->next_out) >(out_buff);
-            zstrm_p->avail_out = buff_size;
+            zstrm_p->avail_out = (uInt) buff_size;
             int ret = deflate(zstrm_p, flush);
             if (ret != Z_OK && ret != Z_STREAM_END && ret != Z_BUF_ERROR) throw Exception(zstrm_p, ret);
             std::streamsize sz = sbuf_p->sputn(out_buff, reinterpret_cast< decltype(out_buff) >(zstrm_p->next_out) - out_buff);
