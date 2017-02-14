@@ -160,10 +160,10 @@ public:
                     // http://en.wikipedia.org/wiki/Gzip
                     // http://stackoverflow.com/questions/9050260/what-does-a-zlib-header-look-like
                     is_text = ! (in_buff_start + 2 <= in_buff_end
-                                   && ((b0 == 0x1F && b1 == 0x8B)         // gzip header
-                                        || (b0 == 0x78 && (b1 == 0x01      // zlib header
-                                                            || b1 == 0x9C
-                                                            || b1 == 0xDA))));
+                                 && ((b0 == 0x1F && b1 == 0x8B)         // gzip header
+                                     || (b0 == 0x78 && (b1 == 0x01      // zlib header
+                                                        || b1 == 0x9C
+                                                        || b1 == 0xDA))));
                 }
                 if (is_text)
                 {
