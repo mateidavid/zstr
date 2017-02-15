@@ -82,7 +82,7 @@ struct static_method_holder
                 "binary"
             };
         std::string res;
-        for (size_t i = 0; i < n_modes; ++i)
+        for (int i = 0; i < n_modes; ++i)
         {
             if (mode & mode_val_v[i])
             {
