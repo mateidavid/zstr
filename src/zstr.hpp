@@ -105,7 +105,7 @@ class istreambuf
 {
 public:
     istreambuf(std::streambuf * _sbuf_p,
-               std::streamsize _buff_size = default_buff_size, bool _auto_detect = true)
+               std::size_t _buff_size = default_buff_size, bool _auto_detect = true)
         : sbuf_p(_sbuf_p),
           zstrm_p(nullptr),
           buff_size(_buff_size),
@@ -114,10 +114,10 @@ public:
           is_text(false)
     {
         assert(sbuf_p);
-        in_buff = new char [(unsigned int) buff_size];
+        in_buff = new char [buff_size];
         in_buff_start = in_buff;
         in_buff_end = in_buff;
-        out_buff = new char [(unsigned int) buff_size];
+        out_buff = new char [buff_size];
         setg(out_buff, out_buff, out_buff);
     }
 
@@ -214,12 +214,12 @@ private:
     char * in_buff_end;
     char * out_buff;
     detail::z_stream_wrapper * zstrm_p;
-    std::streamsize buff_size;
+    std::size_t buff_size;
     bool auto_detect;
     bool auto_detect_run;
     bool is_text;
 
-    static const std::streamsize default_buff_size = 1 << 20;
+    static const std::size_t default_buff_size = (std::size_t)1 << 20;
 }; // class istreambuf
 
 class ostreambuf
@@ -227,14 +227,14 @@ class ostreambuf
 {
 public:
     ostreambuf(std::streambuf * _sbuf_p,
-               std::streamsize _buff_size = default_buff_size, int _level = Z_DEFAULT_COMPRESSION)
+               std::size_t _buff_size = default_buff_size, int _level = Z_DEFAULT_COMPRESSION)
         : sbuf_p(_sbuf_p),
           zstrm_p(new detail::z_stream_wrapper(false, _level)),
           buff_size(_buff_size)
     {
         assert(sbuf_p);
-        in_buff = new char [(unsigned int) buff_size];
-        out_buff = new char [(unsigned int) buff_size];
+        in_buff = new char [buff_size];
+        out_buff = new char [buff_size];
         setp(in_buff, in_buff + buff_size);
     }
 
@@ -248,7 +248,7 @@ public:
         while (true)
         {
             zstrm_p->next_out = reinterpret_cast< decltype(zstrm_p->next_out) >(out_buff);
-            zstrm_p->avail_out = (uInt) buff_size;
+            zstrm_p->avail_out = buff_size;
             int ret = deflate(zstrm_p, flush);
             if (ret != Z_OK && ret != Z_STREAM_END && ret != Z_BUF_ERROR) throw Exception(zstrm_p, ret);
             std::streamsize sz = sbuf_p->sputn(out_buff, reinterpret_cast< decltype(out_buff) >(zstrm_p->next_out) - out_buff);
@@ -313,9 +313,9 @@ private:
     char * in_buff;
     char * out_buff;
     detail::z_stream_wrapper * zstrm_p;
-    std::streamsize buff_size;
+    std::size_t buff_size;
 
-    static const std::streamsize default_buff_size = 1 << 20;
+    static const std::size_t default_buff_size = (std::size_t)1 << 20;
 }; // class ostreambuf
 
 class istream
