@@ -22,22 +22,22 @@ namespace strict_fstream
 static std::string strerror()
 {
     std::string buff(80, '\0');
-#ifdef _WIN32
+#if defined(__GNUC__) && defined(_GNU_SOURCE)
+    // GNU-specific strerror_r()
+    auto p = strerror_r(errno, &buff[0], buff.size());
+    std::string tmp(p, std::strlen(p));
+    std::swap(buff, tmp);
+#elif defined(_WIN32)
     if (strerror_s(&buff[0], buff.size(), errno) != 0)
     {
         buff = "Unknown error";
     }
-#elif (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE
-// XSI-compliant strerror_r()
+#else /* XSI strerror_r */
+    // XSI-compliant strerror_r()
     if (strerror_r(errno, &buff[0], buff.size()) != 0)
     {
         buff = "Unknown error";
     }
-#else
-// GNU-specific strerror_r()
-    auto p = strerror_r(errno, &buff[0], buff.size());
-    std::string tmp(p, std::strlen(p));
-    std::swap(buff, tmp);
 #endif
     buff.resize(buff.find('\0'));
     return buff;
