@@ -18,6 +18,8 @@
 namespace zstr
 {
 
+static const std::size_t default_buff_size = (std::size_t)1 << 20;
+
 /// Exception class thrown by failed zlib operations.
 class Exception
     : public std::exception
@@ -64,7 +66,7 @@ class z_stream_wrapper
     : public z_stream
 {
 public:
-    z_stream_wrapper(bool _is_input = true, int _level = Z_DEFAULT_COMPRESSION)
+    z_stream_wrapper(bool _is_input, int _level, int _window_bits)
         : is_input(_is_input)
     {
         this->zalloc = Z_NULL;
@@ -75,11 +77,11 @@ public:
         {
             this->avail_in = 0;
             this->next_in = Z_NULL;
-            ret = inflateInit2(this, 15+32);
+            ret = inflateInit2(this, _window_bits ? _window_bits : 15+32);
         }
         else
         {
-            ret = deflateInit2(this, _level, Z_DEFLATED, 15+16, 8, Z_DEFAULT_STRATEGY);
+            ret = deflateInit2(this, _level, Z_DEFLATED, _window_bits ? _window_bits : 15+16, 8, Z_DEFAULT_STRATEGY);
         }
         if (ret != Z_OK) throw Exception(this, ret);
     }
@@ -105,13 +107,14 @@ class istreambuf
 {
 public:
     istreambuf(std::streambuf * _sbuf_p,
-               std::size_t _buff_size = default_buff_size, bool _auto_detect = true)
+               std::size_t _buff_size = default_buff_size, bool _auto_detect = true, int _window_bits = 0)
         : sbuf_p(_sbuf_p),
           zstrm_p(nullptr),
           buff_size(_buff_size),
           auto_detect(_auto_detect),
           auto_detect_run(false),
-          is_text(false)
+          is_text(false),
+          window_bits(_window_bits)
     {
         assert(sbuf_p);
         in_buff = new char [buff_size];
@@ -177,7 +180,7 @@ public:
                 else
                 {
                     // run inflate() on input
-                    if (! zstrm_p) zstrm_p = new detail::z_stream_wrapper(true);
+                    if (! zstrm_p) zstrm_p = new detail::z_stream_wrapper(true, Z_DEFAULT_COMPRESSION, window_bits);
                     zstrm_p->next_in = reinterpret_cast< decltype(zstrm_p->next_in) >(in_buff_start);
                     zstrm_p->avail_in = in_buff_end - in_buff_start;
                     zstrm_p->next_out = reinterpret_cast< decltype(zstrm_p->next_out) >(out_buff_free_start);
@@ -218,6 +221,7 @@ private:
     bool auto_detect;
     bool auto_detect_run;
     bool is_text;
+    int window_bits;
 
     static const std::size_t default_buff_size = (std::size_t)1 << 20;
 }; // class istreambuf
@@ -227,9 +231,9 @@ class ostreambuf
 {
 public:
     ostreambuf(std::streambuf * _sbuf_p,
-               std::size_t _buff_size = default_buff_size, int _level = Z_DEFAULT_COMPRESSION)
+               std::size_t _buff_size = default_buff_size, int _level = Z_DEFAULT_COMPRESSION, int _window_bits = 0)
         : sbuf_p(_sbuf_p),
-          zstrm_p(new detail::z_stream_wrapper(false, _level)),
+          zstrm_p(new detail::z_stream_wrapper(false, _level, _window_bits)),
           buff_size(_buff_size)
     {
         assert(sbuf_p);
@@ -315,15 +319,15 @@ private:
     detail::z_stream_wrapper * zstrm_p;
     std::size_t buff_size;
 
-    static const std::size_t default_buff_size = (std::size_t)1 << 20;
 }; // class ostreambuf
 
 class istream
     : public std::istream
 {
 public:
-    istream(std::istream & is)
-        : std::istream(new istreambuf(is.rdbuf()))
+    istream(std::istream & is,
+            std::size_t _buff_size = default_buff_size, bool _auto_detect = true, int _window_bits = 0)
+        : std::istream(new istreambuf(is.rdbuf(), _buff_size, _auto_detect, _window_bits))
     {
         exceptions(std::ios_base::badbit);
     }
@@ -342,8 +346,9 @@ class ostream
     : public std::ostream
 {
 public:
-    ostream(std::ostream & os)
-        : std::ostream(new ostreambuf(os.rdbuf()))
+    ostream(std::ostream & os,
+            std::size_t _buff_size = default_buff_size, int _level = Z_DEFAULT_COMPRESSION, int _window_bits = 0)
+        : std::ostream(new ostreambuf(os.rdbuf(), _buff_size, _level, _window_bits))
     {
         exceptions(std::ios_base::badbit);
     }
