@@ -403,6 +403,11 @@ public:
     {
         exceptions(std::ios_base::badbit);
     }
+    ofstream& flush() {
+        std::ostream::flush();
+        _fs.flush();
+        return *this;
+    }
     virtual ~ofstream()
     {
         if (rdbuf()) delete rdbuf();
