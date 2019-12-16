@@ -388,13 +388,14 @@ public:
         if (_fs.is_open()) close();
         if (rdbuf()) delete rdbuf();
     }
-    streampos zstr_tellg()
-    {
-        return _fs.tellg();
-    }
     virtual void close()
     {
         _fs.close();
+    }
+    // Return the position within the compressed file
+    streampos compressed_tellg()
+    {
+        return _fs.tellg();
     }
 }; // class ifstream
 
@@ -418,6 +419,11 @@ public:
     {
         std::ostream::flush();
         _fs.close();
+    }
+    // Return the position within the compressed file
+    streampos compressed_tellg()
+    {
+        return _fs.tellg();
     }
 }; // class ofstream
 
