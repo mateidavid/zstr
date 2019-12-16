@@ -207,6 +207,7 @@ public:
             ? traits_type::eof()
             : traits_type::to_int_type(*this->gptr());
     }
+    static const std::size_t default_buff_size = (std::size_t)1 << 20;
 private:
     std::streambuf * sbuf_p;
     char * in_buff;
@@ -219,7 +220,6 @@ private:
     bool auto_detect_run;
     bool is_text;
 
-    static const std::size_t default_buff_size = (std::size_t)1 << 20;
 }; // class istreambuf
 
 class ostreambuf
@@ -308,6 +308,7 @@ public:
         deflateReset(zstrm_p);
         return 0;
     }
+    static const std::size_t default_buff_size = (std::size_t)1 << 20;
 private:
     std::streambuf * sbuf_p;
     char * in_buff;
@@ -315,7 +316,6 @@ private:
     detail::z_stream_wrapper * zstrm_p;
     std::size_t buff_size;
 
-    static const std::size_t default_buff_size = (std::size_t)1 << 20;
 }; // class ostreambuf
 
 class istream
@@ -377,15 +377,25 @@ class ifstream
       public std::istream
 {
 public:
-    explicit ifstream(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in)
+    explicit ifstream(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in, size_t buff_size = istreambuf::default_buff_size)
         : detail::strict_fstream_holder< strict_fstream::ifstream >(filename, mode),
-          std::istream(new istreambuf(_fs.rdbuf()))
+          std::istream(new istreambuf(_fs.rdbuf(), buff_size))
     {
         exceptions(std::ios_base::badbit);
     }
     virtual ~ifstream()
     {
+        if (_fs.is_open()) close();
         if (rdbuf()) delete rdbuf();
+    }
+    virtual void close()
+    {
+        _fs.close();
+    }
+    // Return the position within the compressed file
+    streampos compressed_tellg()
+    {
+        return _fs.tellg();
     }
 }; // class ifstream
 
@@ -394,15 +404,26 @@ class ofstream
       public std::ostream
 {
 public:
-    explicit ofstream(const std::string& filename, std::ios_base::openmode mode = std::ios_base::out)
+    explicit ofstream(const std::string& filename, std::ios_base::openmode mode = std::ios_base::out, int compress_level = Z_DEFAULT_COMPRESSION, size_t buff_size = ostreambuf::default_buff_size)
         : detail::strict_fstream_holder< strict_fstream::ofstream >(filename, mode | std::ios_base::binary),
-          std::ostream(new ostreambuf(_fs.rdbuf()))
+          std::ostream(new ostreambuf(_fs.rdbuf(), buff_size, compress_level))
     {
         exceptions(std::ios_base::badbit);
     }
     virtual ~ofstream()
     {
+        if (_fs.is_open()) close();
         if (rdbuf()) delete rdbuf();
+    }
+    virtual void close()
+    {
+        std::ostream::flush();
+        _fs.close();
+    }
+    // Return the position within the compressed file
+    streampos compressed_tellp()
+    {
+        return _fs.tellp();
     }
 }; // class ofstream
 

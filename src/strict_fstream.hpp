@@ -21,13 +21,14 @@ namespace strict_fstream
 /// Ref: http://stackoverflow.com/a/901316/717706
 static std::string strerror()
 {
-    std::string buff(80, '\0');
+    size_t maxSize = 255;
+    std::string buff(maxSize, '\0');
 #ifdef _WIN32
     if (strerror_s(&buff[0], buff.size(), errno) != 0)
     {
         buff = "Unknown error";
     }
-#elif (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE
+#elif ((_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE) || defined(__APPLE__)
 // XSI-compliant strerror_r()
     if (strerror_r(errno, &buff[0], buff.size()) != 0)
     {
@@ -36,10 +37,16 @@ static std::string strerror()
 #else
 // GNU-specific strerror_r()
     auto p = strerror_r(errno, &buff[0], buff.size());
-    std::string tmp(p, std::strlen(p));
+    maxSize = std::strlen(p);
+    std::string tmp(p, maxSize);
     std::swap(buff, tmp);
 #endif
-    buff.resize(buff.find('\0'));
+    size_t pos = buff.find('\0');
+    if (pos != std::string::npos) {
+        buff.resize(buff.find('\0'));
+    } else {
+        buff[maxSize-1]='\0';
+    }
     return buff;
 }
 
