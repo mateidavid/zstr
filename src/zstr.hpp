@@ -421,9 +421,9 @@ public:
         _fs.close();
     }
     // Return the position within the compressed file
-    streampos compressed_tellg()
+    streampos compressed_tellp()
     {
-        return _fs.tellg();
+        return _fs.tellp();
     }
 }; // class ofstream
 
