@@ -24,43 +24,55 @@ static const std::size_t default_buff_size = (std::size_t)1 << 20;
 
 /// Exception class thrown by failed zlib operations.
 class Exception
-    : public std::exception
+    : public std::ios_base::failure
 {
 public:
-    Exception(z_stream * zstrm_p, int ret)
-        : _msg("zlib: ")
+    static std::string error_to_message(z_stream * zstrm_p, int ret)
     {
+        std::string msg = "zlib: ";
         switch (ret)
         {
         case Z_STREAM_ERROR:
-            _msg += "Z_STREAM_ERROR: ";
+            msg += "Z_STREAM_ERROR: ";
             break;
         case Z_DATA_ERROR:
-            _msg += "Z_DATA_ERROR: ";
+            msg += "Z_DATA_ERROR: ";
             break;
         case Z_MEM_ERROR:
-            _msg += "Z_MEM_ERROR: ";
+            msg += "Z_MEM_ERROR: ";
             break;
         case Z_VERSION_ERROR:
-            _msg += "Z_VERSION_ERROR: ";
+            msg += "Z_VERSION_ERROR: ";
             break;
         case Z_BUF_ERROR:
-            _msg += "Z_BUF_ERROR: ";
+            msg += "Z_BUF_ERROR: ";
             break;
         default:
             std::ostringstream oss;
             oss << ret;
-            _msg += "[" + oss.str() + "]: ";
+            msg += "[" + oss.str() + "]: ";
             break;
         }
         if (zstrm_p->msg) {
-            _msg += zstrm_p->msg;
+            msg += zstrm_p->msg;
         }
+        msg += " ("
+                "next_in: " +
+                std::to_string(uintptr_t(zstrm_p->next_in)) +
+                ", avail_in: " +
+                std::to_string(uintptr_t(zstrm_p->avail_in)) +
+                ", next_out: " +
+                std::to_string(uintptr_t(zstrm_p->next_out)) +
+                ", avail_out: " +
+                std::to_string(uintptr_t(zstrm_p->avail_out)) +
+                ")";
+        return msg;
     }
-    Exception(const std::string msg) : _msg(msg) {}
-    const char * what() const noexcept { return _msg.c_str(); }
-private:
-    std::string _msg;
+
+    Exception(z_stream * zstrm_p, int ret)
+        : std::ios_base::failure(error_to_message(zstrm_p, ret))
+    {
+    }
 }; // class Exception
 
 namespace detail
