@@ -14,6 +14,8 @@
 #include <sstream>
 #include <zlib.h>
 #include <strict_fstream.hpp>
+#include <memory>
+#include <iostream>
 
 namespace zstr
 {
@@ -51,7 +53,9 @@ public:
             _msg += "[" + oss.str() + "]: ";
             break;
         }
-        _msg += zstrm_p->msg;
+        if (zstrm_p->msg) {
+            _msg += zstrm_p->msg;
+        }
     }
     Exception(const std::string msg) : _msg(msg) {}
     const char * what() const noexcept { return _msg.c_str(); }
@@ -117,11 +121,11 @@ public:
           window_bits(_window_bits)
     {
         assert(sbuf_p);
-        in_buff = new char [buff_size];
-        in_buff_start = in_buff;
-        in_buff_end = in_buff;
-        out_buff = new char [buff_size];
-        setg(out_buff, out_buff, out_buff);
+        in_buff = std::make_unique<char[]>(buff_size);
+        in_buff_start = in_buff.get();
+        in_buff_end = in_buff.get();
+        out_buff = std::make_unique<char[]>(buff_size);
+        setg(out_buff.get(), out_buff.get(), out_buff.get());
     }
 
     istreambuf(const istreambuf &) = delete;
@@ -129,28 +133,21 @@ public:
     istreambuf & operator = (const istreambuf &) = delete;
     istreambuf & operator = (istreambuf &&) = default;
 
-    virtual ~istreambuf()
-    {
-        delete [] in_buff;
-        delete [] out_buff;
-        if (zstrm_p) delete zstrm_p;
-    }
-
-    virtual std::streambuf::int_type underflow()
+    std::streambuf::int_type underflow() override
     {
         if (this->gptr() == this->egptr())
         {
             // pointers for free region in output buffer
-            char * out_buff_free_start = out_buff;
+            char * out_buff_free_start = out_buff.get();
             do
             {
                 // read more input if none available
                 if (in_buff_start == in_buff_end)
                 {
                     // empty input buffer: refill from the start
-                    in_buff_start = in_buff;
-                    std::streamsize sz = sbuf_p->sgetn(in_buff, buff_size);
-                    in_buff_end = in_buff + sz;
+                    in_buff_start = in_buff.get();
+                    std::streamsize sz = sbuf_p->sgetn(in_buff.get(), buff_size);
+                    in_buff_end = in_buff_start + sz;
                     if (in_buff_end == in_buff_start) break; // end of input
                 }
                 // auto detect if the stream contains text or deflate data
@@ -171,40 +168,39 @@ public:
                 if (is_text)
                 {
                     // simply swap in_buff and out_buff, and adjust pointers
-                    assert(in_buff_start == in_buff);
+                    assert(in_buff_start == in_buff.get());
                     std::swap(in_buff, out_buff);
                     out_buff_free_start = in_buff_end;
-                    in_buff_start = in_buff;
-                    in_buff_end = in_buff;
+                    in_buff_start = in_buff.get();
+                    in_buff_end = in_buff.get();
                 }
                 else
                 {
                     // run inflate() on input
-                    if (! zstrm_p) zstrm_p = new detail::z_stream_wrapper(true, Z_DEFAULT_COMPRESSION, window_bits);
+                    if (! zstrm_p) zstrm_p = std::make_unique<detail::z_stream_wrapper>(true, Z_DEFAULT_COMPRESSION, window_bits);
                     zstrm_p->next_in = reinterpret_cast< decltype(zstrm_p->next_in) >(in_buff_start);
                     zstrm_p->avail_in = in_buff_end - in_buff_start;
                     zstrm_p->next_out = reinterpret_cast< decltype(zstrm_p->next_out) >(out_buff_free_start);
-                    zstrm_p->avail_out = (out_buff + buff_size) - out_buff_free_start;
-                    int ret = inflate(zstrm_p, Z_NO_FLUSH);
+                    zstrm_p->avail_out = (out_buff.get() + buff_size) - out_buff_free_start;
+                    int ret = inflate(zstrm_p.get(), Z_NO_FLUSH);
                     // process return code
-                    if (ret != Z_OK && ret != Z_STREAM_END) throw Exception(zstrm_p, ret);
+                    if (ret != Z_OK && ret != Z_STREAM_END) throw Exception(zstrm_p.get(), ret);
                     // update in&out pointers following inflate()
                     in_buff_start = reinterpret_cast< decltype(in_buff_start) >(zstrm_p->next_in);
                     in_buff_end = in_buff_start + zstrm_p->avail_in;
                     out_buff_free_start = reinterpret_cast< decltype(out_buff_free_start) >(zstrm_p->next_out);
-                    assert(out_buff_free_start + zstrm_p->avail_out == out_buff + buff_size);
+                    assert(out_buff_free_start + zstrm_p->avail_out == out_buff.get() + buff_size);
                     // if stream ended, deallocate inflator
                     if (ret == Z_STREAM_END)
                     {
-                        delete zstrm_p;
-                        zstrm_p = nullptr;
+                        zstrm_p.reset();
                     }
                 }
-            } while (out_buff_free_start == out_buff);
+            } while (out_buff_free_start == out_buff.get());
             // 2 exit conditions:
             // - end of input: there might or might not be output available
             // - out_buff_free_start != out_buff: output available
-            this->setg(out_buff, out_buff, out_buff_free_start);
+            this->setg(out_buff.get(), out_buff.get(), out_buff_free_start);
         }
         return this->gptr() == this->egptr()
             ? traits_type::eof()
@@ -212,11 +208,11 @@ public:
     }
 private:
     std::streambuf * sbuf_p;
-    char * in_buff;
+    std::unique_ptr<char[]> in_buff;
     char * in_buff_start;
     char * in_buff_end;
-    char * out_buff;
-    detail::z_stream_wrapper * zstrm_p;
+    std::unique_ptr<char[]> out_buff;
+    std::unique_ptr<detail::z_stream_wrapper> zstrm_p;
     std::size_t buff_size;
     bool auto_detect;
     bool auto_detect_run;
@@ -233,13 +229,13 @@ public:
     ostreambuf(std::streambuf * _sbuf_p,
                std::size_t _buff_size = default_buff_size, int _level = Z_DEFAULT_COMPRESSION, int _window_bits = 0)
         : sbuf_p(_sbuf_p),
-          zstrm_p(new detail::z_stream_wrapper(false, _level, _window_bits)),
+          zstrm_p(std::make_unique<detail::z_stream_wrapper>(false, _level, _window_bits)),
           buff_size(_buff_size)
     {
         assert(sbuf_p);
-        in_buff = new char [buff_size];
-        out_buff = new char [buff_size];
-        setp(in_buff, in_buff + buff_size);
+        in_buff = std::make_unique<char[]>(buff_size);
+        out_buff = std::make_unique<char[]>(buff_size);
+        setp(in_buff.get(), in_buff.get() + buff_size);
     }
 
     ostreambuf(const ostreambuf &) = delete;
@@ -251,12 +247,15 @@ public:
     {
         while (true)
         {
-            zstrm_p->next_out = reinterpret_cast< decltype(zstrm_p->next_out) >(out_buff);
+            zstrm_p->next_out = reinterpret_cast< decltype(zstrm_p->next_out) >(out_buff.get());
             zstrm_p->avail_out = buff_size;
-            int ret = deflate(zstrm_p, flush);
-            if (ret != Z_OK && ret != Z_STREAM_END && ret != Z_BUF_ERROR) throw Exception(zstrm_p, ret);
-            std::streamsize sz = sbuf_p->sputn(out_buff, reinterpret_cast< decltype(out_buff) >(zstrm_p->next_out) - out_buff);
-            if (sz != reinterpret_cast< decltype(out_buff) >(zstrm_p->next_out) - out_buff)
+            int ret = deflate(zstrm_p.get(), flush);
+            if (ret != Z_OK && ret != Z_STREAM_END) {
+                failed = true;
+                throw Exception(zstrm_p.get(), ret);
+            }
+            std::streamsize sz = sbuf_p->sputn(out_buff.get(), reinterpret_cast< decltype(out_buff.get()) >(zstrm_p->next_out) - out_buff.get());
+            if (sz != reinterpret_cast< decltype(out_buff.get()) >(zstrm_p->next_out) - out_buff.get())
             {
                 // there was an error in the sink stream
                 return -1;
@@ -279,12 +278,11 @@ public:
         // close the ofstream with an explicit call to close(), and do not rely
         // on the implicit call in the destructor.
         //
-        sync();
-        delete [] in_buff;
-        delete [] out_buff;
-        delete zstrm_p;
+        if (!failed) {
+            sync();
+        }
     }
-    virtual std::streambuf::int_type overflow(std::streambuf::int_type c = traits_type::eof())
+    std::streambuf::int_type overflow(std::streambuf::int_type c = traits_type::eof()) override
     {
         zstrm_p->next_in = reinterpret_cast< decltype(zstrm_p->next_in) >(pbase());
         zstrm_p->avail_in = pptr() - pbase();
@@ -297,10 +295,10 @@ public:
                 return traits_type::eof();
             }
         }
-        setp(in_buff, in_buff + buff_size);
+        setp(in_buff.get(), in_buff.get() + buff_size);
         return traits_type::eq_int_type(c, traits_type::eof()) ? traits_type::eof() : sputc(c);
     }
-    virtual int sync()
+    int sync() override
     {
         // first, call overflow to clear in_buff
         overflow();
@@ -309,15 +307,16 @@ public:
         zstrm_p->next_in = nullptr;
         zstrm_p->avail_in = 0;
         if (deflate_loop(Z_FINISH) != 0) return -1;
-        deflateReset(zstrm_p);
+        deflateReset(zstrm_p.get());
         return 0;
     }
 private:
-    std::streambuf * sbuf_p;
-    char * in_buff;
-    char * out_buff;
-    detail::z_stream_wrapper * zstrm_p;
+    std::streambuf * sbuf_p = nullptr;
+    std::unique_ptr<char[]> in_buff;
+    std::unique_ptr<char[]> out_buff;
+    std::unique_ptr<detail::z_stream_wrapper> zstrm_p;
     std::size_t buff_size;
+    bool failed = false;
 
 }; // class ostreambuf
 
