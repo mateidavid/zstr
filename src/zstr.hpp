@@ -250,7 +250,7 @@ public:
             zstrm_p->next_out = reinterpret_cast< decltype(zstrm_p->next_out) >(out_buff.get());
             zstrm_p->avail_out = buff_size;
             int ret = deflate(zstrm_p.get(), flush);
-            if (ret != Z_OK && ret != Z_STREAM_END) {
+            if (ret != Z_OK && ret != Z_STREAM_END && ret != Z_BUF_ERROR) {
                 failed = true;
                 throw Exception(zstrm_p.get(), ret);
             }
