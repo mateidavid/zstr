@@ -145,6 +145,20 @@ public:
     istreambuf & operator = (const istreambuf &) = delete;
     istreambuf & operator = (istreambuf &&) = default;
 
+    pos_type seekoff(off_type off, std::ios_base::seekdir dir,
+                     std::ios_base::openmode which) override
+    {
+        if (off != 0 || dir != std::ios_base::cur) {
+            return std::streambuf::seekoff(off, dir, which);
+        }
+
+        if (!zstrm_p) {
+            return 0;
+        }
+
+        return zstrm_p->total_out - in_avail();
+    }
+
     std::streambuf::int_type underflow() override
     {
         if (this->gptr() == this->egptr())
@@ -202,11 +216,6 @@ public:
                     in_buff_end = in_buff_start + zstrm_p->avail_in;
                     out_buff_free_start = reinterpret_cast< decltype(out_buff_free_start) >(zstrm_p->next_out);
                     assert(out_buff_free_start + zstrm_p->avail_out == out_buff.get() + buff_size);
-                    // if stream ended, deallocate inflator
-                    if (ret == Z_STREAM_END)
-                    {
-                        zstrm_p.reset();
-                    }
                 }
             } while (out_buff_free_start == out_buff.get());
             // 2 exit conditions:
