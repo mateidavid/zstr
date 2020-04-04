@@ -249,6 +249,7 @@ public:
         {
             zstrm_p->next_out = reinterpret_cast< decltype(zstrm_p->next_out) >(out_buff);
             zstrm_p->avail_out = buff_size;
+            int avail_in = zstrm_p->avail_in;
             int ret = deflate(zstrm_p, flush);
             if (ret != Z_OK && ret != Z_STREAM_END && ret != Z_BUF_ERROR) throw Exception(zstrm_p, ret);
             std::streamsize sz = sbuf_p->sputn(out_buff, reinterpret_cast< decltype(out_buff) >(zstrm_p->next_out) - out_buff);
@@ -377,7 +378,7 @@ class ifstream
       public std::istream
 {
 public:
-    explicit ifstream(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in, size_t buff_size = istreambuf::default_buff_size)
+    explicit ifstream(const std::string filename, std::ios_base::openmode mode = std::ios_base::in, size_t buff_size = istreambuf::default_buff_size)
         : detail::strict_fstream_holder< strict_fstream::ifstream >(filename, mode),
           std::istream(new istreambuf(_fs.rdbuf(), buff_size))
     {
@@ -404,8 +405,14 @@ class ofstream
       public std::ostream
 {
 public:
-    explicit ofstream(const std::string& filename, std::ios_base::openmode mode = std::ios_base::out, int compress_level = Z_DEFAULT_COMPRESSION, size_t buff_size = ostreambuf::default_buff_size)
+    explicit ofstream(const std::string filename, std::ios_base::openmode mode, int compress_level = Z_DEFAULT_COMPRESSION, size_t buff_size = ostreambuf::default_buff_size)
         : detail::strict_fstream_holder< strict_fstream::ofstream >(filename, mode | std::ios_base::binary),
+          std::ostream(new ostreambuf(_fs.rdbuf(), buff_size, compress_level))
+    {
+        exceptions(std::ios_base::badbit);
+    }
+    explicit ofstream(const std::string filename, int compress_level = Z_DEFAULT_COMPRESSION, size_t buff_size = ostreambuf::default_buff_size)
+        : detail::strict_fstream_holder< strict_fstream::ofstream >(filename, std::ios_base::out | std::ios_base::binary),
           std::ostream(new ostreambuf(_fs.rdbuf(), buff_size, compress_level))
     {
         exceptions(std::ios_base::badbit);
