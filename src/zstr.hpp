@@ -394,7 +394,7 @@ public:
         _fs.close();
     }
     // Return the position within the compressed file
-    streampos compressed_tellg()
+    std::streampos compressed_tellg()
     {
         return _fs.tellg();
     }
@@ -428,7 +428,7 @@ public:
         _fs.close();
     }
     // Return the position within the compressed file
-    streampos compressed_tellp()
+    std::streampos compressed_tellp()
     {
         return _fs.tellp();
     }
