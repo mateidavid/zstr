@@ -141,9 +141,7 @@ public:
     }
 
     istreambuf(const istreambuf &) = delete;
-    istreambuf(istreambuf &&) = default;
     istreambuf & operator = (const istreambuf &) = delete;
-    istreambuf & operator = (istreambuf &&) = default;
 
     pos_type seekoff(off_type off, std::ios_base::seekdir dir,
                      std::ios_base::openmode which) override
@@ -260,9 +258,7 @@ public:
     }
 
     ostreambuf(const ostreambuf &) = delete;
-    ostreambuf(ostreambuf &&) = default;
     ostreambuf & operator = (const ostreambuf &) = delete;
-    ostreambuf & operator = (ostreambuf &&) = default;
 
     int deflate_loop(int flush)
     {
