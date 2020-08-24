@@ -39,7 +39,10 @@ static std::string strerror()
     std::string tmp(p, std::strlen(p));
     std::swap(buff, tmp);
 #endif
-    buff.resize(buff.find('\0'));
+    if(buff.find('\0') != std::string::npos)
+    {
+        buff.resize(buff.find('\0'));
+    }
     return buff;
 }
 
