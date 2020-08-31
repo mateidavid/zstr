@@ -203,9 +203,9 @@ public:
                     // run inflate() on input
                     if (! zstrm_p) zstrm_p = std::make_unique<detail::z_stream_wrapper>(true, Z_DEFAULT_COMPRESSION, window_bits);
                     zstrm_p->next_in = reinterpret_cast< decltype(zstrm_p->next_in) >(in_buff_start);
-                    zstrm_p->avail_in = in_buff_end - in_buff_start;
+                    zstrm_p->avail_in = uint32_t(in_buff_end - in_buff_start);
                     zstrm_p->next_out = reinterpret_cast< decltype(zstrm_p->next_out) >(out_buff_free_start);
-                    zstrm_p->avail_out = (out_buff.get() + buff_size) - out_buff_free_start;
+                    zstrm_p->avail_out = uint32_t((out_buff.get() + buff_size) - out_buff_free_start);
                     int ret = inflate(zstrm_p.get(), Z_NO_FLUSH);
                     // process return code
                     if (ret != Z_OK && ret != Z_STREAM_END) throw Exception(zstrm_p.get(), ret);
@@ -265,7 +265,7 @@ public:
         while (true)
         {
             zstrm_p->next_out = reinterpret_cast< decltype(zstrm_p->next_out) >(out_buff.get());
-            zstrm_p->avail_out = buff_size;
+            zstrm_p->avail_out = uint32_t(buff_size);
             int ret = deflate(zstrm_p.get(), flush);
             if (ret != Z_OK && ret != Z_STREAM_END && ret != Z_BUF_ERROR) {
                 failed = true;
@@ -302,7 +302,7 @@ public:
     std::streambuf::int_type overflow(std::streambuf::int_type c = traits_type::eof()) override
     {
         zstrm_p->next_in = reinterpret_cast< decltype(zstrm_p->next_in) >(pbase());
-        zstrm_p->avail_in = pptr() - pbase();
+        zstrm_p->avail_in = uint32_t(pptr() - pbase());
         while (zstrm_p->avail_in > 0)
         {
             int r = deflate_loop(Z_NO_FLUSH);
@@ -313,7 +313,7 @@ public:
             }
         }
         setp(in_buff.get(), in_buff.get() + buff_size);
-        return traits_type::eq_int_type(c, traits_type::eof()) ? traits_type::eof() : sputc(c);
+        return traits_type::eq_int_type(c, traits_type::eof()) ? traits_type::eof() : sputc(char_type(c));
     }
     int sync() override
     {
