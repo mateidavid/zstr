@@ -21,26 +21,27 @@ namespace strict_fstream
 /// Ref: http://stackoverflow.com/a/901316/717706
 static std::string strerror()
 {
-    std::string buff(80, '\0');
+    std::string buff(256, '\0');
 #ifdef _WIN32
-    if (strerror_s(&buff[0], buff.size(), errno) != 0)
-    {
+    if (strerror_s(buff.data(), buff.size(), errno) == 0) {
+        buff.resize(buff.find('\0'));
+    } else {
         buff = "Unknown error";
     }
+    return buff;
 #elif (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600 || defined(__APPLE__)) && ! _GNU_SOURCE
 // XSI-compliant strerror_r()
-    if (strerror_r(errno, &buff[0], buff.size()) != 0)
-    {
+    if (strerror_r(errno, buff.data(), buff.size()) == 0) {
+        buff.resize(buff.find('\0'));
+    } else {
         buff = "Unknown error";
     }
+    return buff;
 #else
 // GNU-specific strerror_r()
     char * p = strerror_r(errno, &buff[0], buff.size());
-    std::string tmp(p, std::strlen(p));
-    std::swap(buff, tmp);
+    return std::string(p, std::strlen(p));
 #endif
-    buff.resize(buff.find('\0'));
-    return buff;
 }
 
 /// Exception class thrown by failed operations.
