@@ -1,5 +1,4 @@
-#ifndef __STRICT_FSTREAM_HPP
-#define __STRICT_FSTREAM_HPP
+#pragma once
 
 #include <cassert>
 #include <fstream>
@@ -200,4 +199,3 @@ public:
 
 } // namespace strict_fstream
 
-#endif

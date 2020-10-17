@@ -6,8 +6,7 @@
 // Reference:
 // http://stackoverflow.com/questions/14086417/how-to-write-custom-input-stream-in-c
 
-#ifndef __ZSTR_HPP
-#define __ZSTR_HPP
+#pragma once
 
 #include <cassert>
 #include <fstream>
@@ -437,4 +436,3 @@ public:
 
 } // namespace zstr
 
-#endif
