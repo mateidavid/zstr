@@ -213,6 +213,10 @@ public:
                     in_buff_end = in_buff_start + zstrm_p->avail_in;
                     out_buff_free_start = reinterpret_cast< decltype(out_buff_free_start) >(zstrm_p->next_out);
                     assert(out_buff_free_start + zstrm_p->avail_out == out_buff.get() + buff_size);
+
+                    if (ret == Z_STREAM_END) {
+                        break;
+                    }
                 }
             } while (out_buff_free_start == out_buff.get());
             // 2 exit conditions:
