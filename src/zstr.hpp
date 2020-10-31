@@ -162,8 +162,13 @@ public:
         {
             // pointers for free region in output buffer
             char * out_buff_free_start = out_buff.get();
+            int tries = 0;
             do
             {
+                if (++tries > 1000) {
+                    throw std::ios_base::failure("Failed to fill buffer after 1000 tries");
+                }
+
                 // read more input if none available
                 if (in_buff_start == in_buff_end)
                 {
