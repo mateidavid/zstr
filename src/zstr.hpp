@@ -303,9 +303,9 @@ public:
         // close the ofstream with an explicit call to close(), and do not rely
         // on the implicit call in the destructor.
         //
-        if (!failed) {
+        if (!failed) try {
             sync();
-        }
+        } catch (...) {}
     }
     std::streambuf::int_type overflow(std::streambuf::int_type c = traits_type::eof()) override
     {
