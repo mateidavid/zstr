@@ -20,7 +20,7 @@ namespace strict_fstream
 /// and POSIX signature found in MUSL on Alpine (2)
 /// Ref 1: http://stackoverflow.com/a/901316/717706
 /// Ref 2: http://stackoverflow.com/a/41956165
-static inline char* strerror_r_compat(int result, char* buffer, int err)
+static char* strerror_r_compat(int result, char* buffer, int err)
 {
     if (result)
     {
@@ -29,7 +29,7 @@ static inline char* strerror_r_compat(int result, char* buffer, int err)
     return buffer;
 }
 
-static inline char* strerror_r_compat(char* result, char*, int)
+static char* strerror_r_compat(char* result, char*, int)
 {
     return result;
 }
