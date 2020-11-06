@@ -16,11 +16,18 @@
 namespace strict_fstream
 {
 
+// Help people out a bit, it seems like this is a common recommenation since
+// musl breaks all over the place.
+#if defined(__NEED_size_t) && !defined(__MUSL__)
+#warning "It seems to be recommended to patch in a define for __MUSL__ if you use musl globally: https://www.openwall.com/lists/musl/2013/02/10/5"
+#define __MUSL__
+#endif
+
 // Workaround for broken musl implementation
 // Since musl insists that they are perfectly compatible, ironically enough,
-// they don't have a __musl__ or similar. But __NEED_size_t is defined in their
+// they don't officially have a __musl__ or similar. But __NEED_size_t is defined in their
 // relevant header (and not in working implementations), so we can use that.
-#ifdef __NEED_size_t
+#ifdef __MUSL__
 #define BROKEN_GNU_STRERROR_R
 #warning "Working around broken strerror_r() implementation in musl, remove when musl is fixed"
 #endif
