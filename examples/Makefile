@@ -7,7 +7,7 @@ SHELL := /bin/bash
 all: test-strict_fstream ztxtpipe zpipe zc
 
 %: %.cpp
-	g++ -std=c++11 -O0 -g3 -ggdb -fno-eliminate-unused-debug-types -Wall -Wextra -pedantic -I../src -o $@ $^ -lz
+	g++ -std=c++14 -O0 -g3 -ggdb -fno-eliminate-unused-debug-types -Wall -Wextra -pedantic -I../src -o $@ $^ -lz
 
 test: ztxtpipe zpipe zc
 	diff -q ztxtpipe.cpp <(./ztxtpipe <ztxtpipe.cpp)
