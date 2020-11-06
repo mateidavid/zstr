@@ -16,24 +16,9 @@
  */
 namespace strict_fstream
 {
-/// Overload of error-reporting function, to enable use with VS (1)
-/// and POSIX signature found in MUSL on Alpine (2)
-/// Ref 1: http://stackoverflow.com/a/901316/717706
-/// Ref 2: http://stackoverflow.com/a/41956165
-static char* strerror_r_compat(int result, char* buffer, int err)
-{
-    if (result)
-    {
-        sprintf(buffer, "Unknown error: %d", err);
-    }
-    return buffer;
-}
 
-static char* strerror_r_compat(char* result, char*, int)
-{
-    return result;
-}
-
+/// Overload of error-reporting function, to enable use with VS.
+/// Ref: http://stackoverflow.com/a/901316/717706
 static std::string strerror()
 {
     std::string buff(80, '\0');
@@ -42,8 +27,15 @@ static std::string strerror()
     {
         buff = "Unknown error";
     }
+#elif (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE
+// XSI-compliant strerror_r()
+    if (strerror_r(errno, &buff[0], buff.size()) != 0)
+    {
+        buff = "Unknown error";
+    }
 #else
-    auto p = strerror_r_compat(strerror_r(errno, &buff[0], buff.size()), &buff[0], errno);
+// GNU-specific strerror_r()
+    auto p = strerror_r(errno, &buff[0], buff.size());
     std::string tmp(p, std::strlen(p));
     std::swap(buff, tmp);
 #endif
