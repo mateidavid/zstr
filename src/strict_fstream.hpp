@@ -25,26 +25,37 @@ namespace strict_fstream
 #warning "Working around broken strerror_r() implementation in musl, remove when musl is fixed"
 #endif
 
+// Non-gnu variants of strerror_* don't necessarily null-terminate if
+// truncating, so we have to do things manually.
+inline std::string &trim_to_null(std::string &buff)
+{
+    const std::string::size_type pos = buff.find('\0');
+    if (pos == std::string::npos) {
+        buff += " [...]"; // it has been truncated
+    } else {
+        buff.resize(pos);
+    }
+    return buff;
+}
+
 /// Overload of error-reporting function, to enable use with VS.
 /// Ref: http://stackoverflow.com/a/901316/717706
 static std::string strerror()
 {
     std::string buff(256, '\0');
 #ifdef _WIN32
-    if (strerror_s(buff.data(), buff.size(), errno) == 0) {
-        buff.resize(buff.find('\0'));
+    if (strerror_s(buff.data(), buff.size(), errno) != 0) {
+        return trim_to_null(buff);
     } else {
-        buff = "Unknown error";
+        return "Unknown error";
     }
-    return buff;
 #elif ((_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600 || defined(__APPLE__)) && ! _GNU_SOURCE) || defined(BROKEN_GNU_STRERROR_R)
 // XSI-compliant strerror_r()
     if (strerror_r(errno, buff.data(), buff.size()) == 0) {
-        buff.resize(buff.find('\0'));
+        return trim_to_null(buff);
     } else {
-        buff = "Unknown error";
+        return "Unknown error";
     }
-    return buff;
 #else
 // GNU-specific strerror_r()
     char * p = strerror_r(errno, &buff[0], buff.size());
