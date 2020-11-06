@@ -16,6 +16,15 @@
 namespace strict_fstream
 {
 
+// Workaround for broken musl implementation
+// Since musl insists that they are perfectly compatible, ironically enough,
+// they don't have a __musl__ or similar. But __NEED_size_t is defined in their
+// relevant header (and not in working implementations), so we can use that.
+#ifdef __NEED_size_t
+#define BROKEN_GNU_STRERROR_R
+#warning "Working around broken strerror_r() implementation in musl, remove when musl is fixed"
+#endif
+
 /// Overload of error-reporting function, to enable use with VS.
 /// Ref: http://stackoverflow.com/a/901316/717706
 static std::string strerror()
@@ -28,7 +37,7 @@ static std::string strerror()
         buff = "Unknown error";
     }
     return buff;
-#elif (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600 || defined(__APPLE__)) && ! _GNU_SOURCE
+#elif (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600 || defined(__APPLE__) || defined(BROKEN_GNU_STRERROR_R)) && ! _GNU_SOURCE
 // XSI-compliant strerror_r()
     if (strerror_r(errno, buff.data(), buff.size()) == 0) {
         buff.resize(buff.find('\0'));
