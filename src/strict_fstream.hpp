@@ -28,7 +28,6 @@ namespace strict_fstream
 // they don't officially have a __musl__ or similar. But __NEED_size_t is defined in their
 // relevant header (and not in working implementations), so we can use that.
 #ifdef __MUSL__
-#define BROKEN_GNU_STRERROR_R
 #warning "Working around broken strerror_r() implementation in musl, remove when musl is fixed"
 #endif
 
@@ -51,17 +50,20 @@ static std::string strerror()
 {
     std::string buff(256, '\0');
 #ifdef _WIN32
-    if (strerror_s(buff.data(), buff.size(), errno) != 0) {
+    // Since strerror_s might set errno itself, we need to store it.
+    const int err_num = errno;
+    if (strerror_s(buff.data(), buff.size(), err_num) != 0) {
         return trim_to_null(buff);
     } else {
-        return "Unknown error";
+        return "Unknown error (" + std::to_string(err_num) + ")";
     }
-#elif ((_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600 || defined(__APPLE__)) && ! _GNU_SOURCE) || defined(BROKEN_GNU_STRERROR_R)
+#elif ((_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600 || defined(__APPLE__)) && ! _GNU_SOURCE) || defined(__MUSL__)
 // XSI-compliant strerror_r()
-    if (strerror_r(errno, buff.data(), buff.size()) == 0) {
+    const int err_num = errno; // See above
+    if (strerror_r(err_num, buff.data(), buff.size()) == 0) {
         return trim_to_null(buff);
     } else {
-        return "Unknown error";
+        return "Unknown error (" + std::to_string(err_num) + ")";
     }
 #else
 // GNU-specific strerror_r()
