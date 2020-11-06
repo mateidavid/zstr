@@ -220,7 +220,8 @@ public:
                     assert(out_buff_free_start + zstrm_p->avail_out == out_buff.get() + buff_size);
 
                     if (ret == Z_STREAM_END) {
-                        break;
+                        // if stream ended, deallocate inflator
+                        zstrm_p.reset();
                     }
                 }
             } while (out_buff_free_start == out_buff.get());
