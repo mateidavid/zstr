@@ -4,6 +4,7 @@
 #include <fstream>
 #include <cstring>
 #include <string>
+#include <vector>
 
 /**
  * This namespace defines wrappers for std::ifstream, std::ofstream, and
@@ -33,22 +34,28 @@ namespace strict_fstream
 
 // Non-gnu variants of strerror_* don't necessarily null-terminate if
 // truncating, so we have to do things manually.
-inline std::string &trim_to_null(std::string &buff)
+inline std::string trim_to_null(const std::vector<char> &buff)
 {
-    const std::string::size_type pos = buff.find('\0');
+    std::string ret(buff.begin(), buff.end());
+
+    const std::string::size_type pos = ret.find('\0');
     if (pos == std::string::npos) {
-        buff += " [...]"; // it has been truncated
+        ret += " [...]"; // it has been truncated
     } else {
-        buff.resize(pos);
+        ret.resize(pos);
     }
-    return buff;
+    return ret;
 }
 
-/// Overload of error-reporting function, to enable use with VS.
-/// Ref: http://stackoverflow.com/a/901316/717706
+/// Overload of error-reporting function, to enable use with VS and non-GNU
+/// POSIX libc's
+/// Ref:
+///   - http://stackoverflow.com/a/901316/717706
 static std::string strerror()
 {
-    std::string buff(256, '\0');
+    // Can't use std::string since we're pre-C++17
+    std::vector<char> buff(256, '\0');
+
 #ifdef _WIN32
     // Since strerror_s might set errno itself, we need to store it.
     const int err_num = errno;
