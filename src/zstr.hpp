@@ -16,6 +16,10 @@
 #include <memory>
 #include <iostream>
 
+#if __cplusplus == 201103L
+#include <zstr_make_unique_polyfill.h>
+#endif
+
 namespace zstr
 {
 
