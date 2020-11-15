@@ -441,6 +441,12 @@ public:
     {
         if (rdbuf()) delete rdbuf();
     }
+
+    /// Return the position within the compressed file (wrapped filestream)
+    std::streampos compressed_tellg()
+    {
+        return _fs.tellg();
+    }
 }; // class ifstream
 
 class ofstream
@@ -473,6 +479,12 @@ public:
     virtual ~ofstream()
     {
         if (rdbuf()) delete rdbuf();
+    }
+
+    // Return the position within the compressed file (wrapped filestream)
+    std::streampos compressed_tellp()
+    {
+        return _fs.tellp();
     }
 }; // class ofstream
 
