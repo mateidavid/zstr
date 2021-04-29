@@ -18,7 +18,7 @@ void test_open(const std::string& stream_class, const std::string& stream_type,
         s_p->open(filename, static_cast< std::ios_base::openmode >(mode));
         exception_thrown = false;
     }
-    catch (std::exception) {}
+    catch (const std::exception &) {}
     std::cout << stream_class << " " << stream_type << " " << (set_fail_bit? "failbit" : "nofailbit") << " "
               << strict_fstream::detail::static_method_holder::mode_to_string(
                   static_cast< std::ios_base::openmode >(mode))
