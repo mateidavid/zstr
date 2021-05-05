@@ -238,7 +238,6 @@ public:
             ? traits_type::eof()
             : traits_type::to_int_type(*this->gptr());
     }
-    static const std::size_t default_buff_size = (std::size_t)1 << 20;
 private:
     std::streambuf * sbuf_p;
     std::unique_ptr<char[]> in_buff;
@@ -340,7 +339,6 @@ public:
         deflateReset(zstrm_p.get());
         return 0;
     }
-    static const std::size_t default_buff_size = (std::size_t)1 << 20;
 private:
     std::streambuf * sbuf_p = nullptr;
     std::unique_ptr<char[]> in_buff;
@@ -349,8 +347,6 @@ private:
     std::size_t buff_size;
     bool failed = false;
 
-public:
-    static const std::size_t default_buff_size = (std::size_t)1 << 20;
 }; // class ostreambuf
 
 class istream
@@ -414,7 +410,7 @@ class ifstream
       public std::istream
 {
 public:
-    explicit ifstream(const std::string filename, std::ios_base::openmode mode = std::ios_base::in, size_t buff_size = istreambuf::default_buff_size)
+    explicit ifstream(const std::string filename, std::ios_base::openmode mode = std::ios_base::in, size_t buff_size = default_buff_size)
         : detail::strict_fstream_holder< strict_fstream::ifstream >(filename, mode),
           std::istream(new istreambuf(_fs.rdbuf(), buff_size))
     {
@@ -442,7 +438,7 @@ class ofstream
 {
 public:
     explicit ofstream(const std::string& filename, std::ios_base::openmode mode = std::ios_base::out,
-                      int level = Z_DEFAULT_COMPRESSION, size_t buff_size = ostreambuf::default_buff_size)
+                      int level = Z_DEFAULT_COMPRESSION, size_t buff_size = default_buff_size)
         : detail::strict_fstream_holder< strict_fstream::ofstream >(filename, mode | std::ios_base::binary),
           std::ostream(new ostreambuf(_fs.rdbuf(), buff_size, level))
     {
