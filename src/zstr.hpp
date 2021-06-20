@@ -409,6 +409,10 @@ struct strict_fstream_holder
     strict_fstream_holder(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in)
         : _fs(filename, mode)
     {}
+    strict_fstream_holder() = default;
+    bool is_open() const {
+        return _fs.is_open();
+    }
     FStream_Type _fs;
 }; // class strict_fstream_holder
 
@@ -425,6 +429,7 @@ public:
     {
         exceptions(std::ios_base::badbit);
     }
+    explicit ifstream(): detail::strict_fstream_holder< strict_fstream::ifstream >(), std::istream(new istreambuf(_fs.rdbuf())){}
     virtual ~ifstream()
     {
         if (rdbuf()) delete rdbuf();
@@ -443,6 +448,7 @@ public:
     {
         exceptions(std::ios_base::badbit);
     }
+    explicit ofstream(): detail::strict_fstream_holder< strict_fstream::ofstream >(), std::ostream(new ostreambuf(_fs.rdbuf())){}
     ofstream& flush() {
         std::ostream::flush();
         _fs.flush();
