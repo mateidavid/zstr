@@ -430,6 +430,13 @@ public:
         exceptions(std::ios_base::badbit);
     }
     explicit ifstream(): detail::strict_fstream_holder< strict_fstream::ifstream >(), std::istream(new istreambuf(_fs.rdbuf())){}
+    void close() {
+        _fs.close();
+    }
+    void open(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in){
+        _fs.open(filename, mode);
+        std::istream::operator=(std::istream(new istreambuf(_fs.rdbuf())));
+    }
     virtual ~ifstream()
     {
         if (rdbuf()) delete rdbuf();
@@ -449,6 +456,15 @@ public:
         exceptions(std::ios_base::badbit);
     }
     explicit ofstream(): detail::strict_fstream_holder< strict_fstream::ofstream >(), std::ostream(new ostreambuf(_fs.rdbuf())){}
+    void close() {
+        std::ostream::flush();
+        _fs.close();
+    }
+    void open(const std::string& filename, std::ios_base::openmode mode = std::ios_base::out, int level = Z_DEFAULT_COMPRESSION){
+        flush();
+        _fs.open(filename, mode | std::ios_base::binary);
+        std::ostream::operator=(std::ostream(new ostreambuf(_fs.rdbuf(), ostreambuf::default_buff_size, level)));
+    }
     ofstream& flush() {
         std::ostream::flush();
         _fs.flush();
