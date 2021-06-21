@@ -413,7 +413,7 @@ struct strict_fstream_holder
     bool is_open() const {
         return _fs.is_open();
     }
-    FStream_Type _fs;
+    FStream_Type _fs {};
 }; // class strict_fstream_holder
 
 } // namespace detail
