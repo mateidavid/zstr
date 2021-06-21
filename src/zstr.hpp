@@ -409,6 +409,10 @@ struct strict_fstream_holder
     strict_fstream_holder(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in)
         : _fs(filename, mode)
     {}
+    strict_fstream_holder() = default;
+    bool is_open() const {
+        return _fs.is_open();
+    }
     FStream_Type _fs;
 }; // class strict_fstream_holder
 
@@ -424,6 +428,14 @@ public:
           std::istream(new istreambuf(_fs.rdbuf()))
     {
         exceptions(std::ios_base::badbit);
+    }
+    explicit ifstream(): detail::strict_fstream_holder< strict_fstream::ifstream >(), std::istream(new istreambuf(_fs.rdbuf())){}
+    void close() {
+        _fs.close();
+    }
+    void open(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in){
+        _fs.open(filename, mode);
+        std::istream::operator=(std::istream(new istreambuf(_fs.rdbuf())));
     }
     virtual ~ifstream()
     {
@@ -442,6 +454,16 @@ public:
           std::ostream(new ostreambuf(_fs.rdbuf(), ostreambuf::default_buff_size, level))
     {
         exceptions(std::ios_base::badbit);
+    }
+    explicit ofstream(): detail::strict_fstream_holder< strict_fstream::ofstream >(), std::ostream(new ostreambuf(_fs.rdbuf())){}
+    void close() {
+        std::ostream::flush();
+        _fs.close();
+    }
+    void open(const std::string& filename, std::ios_base::openmode mode = std::ios_base::out, int level = Z_DEFAULT_COMPRESSION){
+        flush();
+        _fs.open(filename, mode | std::ios_base::binary);
+        std::ostream::operator=(std::ostream(new ostreambuf(_fs.rdbuf(), ostreambuf::default_buff_size, level)));
     }
     ofstream& flush() {
         std::ostream::flush();
