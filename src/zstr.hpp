@@ -23,7 +23,7 @@
 namespace zstr
 {
 
-static const std::size_t default_buff_size = (std::size_t)1 << 20;
+static const std::size_t default_buff_size = static_cast<std::size_t>(1 << 20);
 
 /// Exception class thrown by failed zlib operations.
 class Exception
@@ -88,14 +88,14 @@ public:
     z_stream_wrapper(bool _is_input, int _level, int _window_bits)
         : is_input(_is_input)
     {
-        this->zalloc = Z_NULL;
-        this->zfree = Z_NULL;
-        this->opaque = Z_NULL;
+        this->zalloc = nullptr;//Z_NULL
+        this->zfree = nullptr;//Z_NULL
+        this->opaque = nullptr;//Z_NULL
         int ret;
         if (is_input)
         {
             this->avail_in = 0;
-            this->next_in = Z_NULL;
+            this->next_in = nullptr;//Z_NULL
             ret = inflateInit2(this, _window_bits ? _window_bits : 15+32);
         }
         else
@@ -128,6 +128,10 @@ public:
     istreambuf(std::streambuf * _sbuf_p,
                std::size_t _buff_size = default_buff_size, bool _auto_detect = true, int _window_bits = 0)
         : sbuf_p(_sbuf_p),
+          in_buff(),
+          in_buff_start(nullptr),
+          in_buff_end(nullptr),
+          out_buff(),
           zstrm_p(nullptr),
           buff_size(_buff_size),
           auto_detect(_auto_detect),
@@ -157,7 +161,7 @@ public:
             return 0;
         }
 
-        return zstrm_p->total_out - in_avail();
+        return static_cast<long int>(zstrm_p->total_out - static_cast<uLong>(in_avail()));
     }
 
     std::streambuf::int_type underflow() override
@@ -178,7 +182,7 @@ public:
                 {
                     // empty input buffer: refill from the start
                     in_buff_start = in_buff.get();
-                    std::streamsize sz = sbuf_p->sgetn(in_buff.get(), buff_size);
+                    std::streamsize sz = sbuf_p->sgetn(in_buff.get(), static_cast<std::streamsize>(buff_size));
                     in_buff_end = in_buff_start + sz;
                     if (in_buff_end == in_buff_start) break; // end of input
                 }
@@ -260,6 +264,8 @@ public:
     ostreambuf(std::streambuf * _sbuf_p,
                std::size_t _buff_size = default_buff_size, int _level = Z_DEFAULT_COMPRESSION, int _window_bits = 0)
         : sbuf_p(_sbuf_p),
+          in_buff(),
+          out_buff(),
           zstrm_p(std::make_unique<detail::z_stream_wrapper>(false, _level, _window_bits)),
           buff_size(_buff_size)
     {
@@ -400,7 +406,8 @@ struct strict_fstream_holder
     strict_fstream_holder(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in)
         : _fs(filename, mode)
     {}
-    FStream_Type _fs;
+    strict_fstream_holder() = default;
+    FStream_Type _fs {};
 }; // class strict_fstream_holder
 
 } // namespace detail
@@ -416,6 +423,17 @@ public:
     {
         exceptions(std::ios_base::badbit);
     }
+    explicit ifstream(): detail::strict_fstream_holder< strict_fstream::ifstream >(), std::istream(new istreambuf(_fs.rdbuf())){}
+    void close() {
+        _fs.close();
+    }
+    void open(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in) {
+        _fs.open(filename, mode);
+        std::istream::operator=(std::istream(new istreambuf(_fs.rdbuf())));
+    }
+    bool is_open() const {
+        return _fs.is_open();
+    }
     virtual ~ifstream()
     {
         if (_fs.is_open()) close();
@@ -425,7 +443,8 @@ public:
     {
         _fs.close();
     }
-    // Return the position within the compressed file
+
+    /// Return the position within the compressed file (wrapped filestream)
     std::streampos compressed_tellg()
     {
         return _fs.tellg();
@@ -444,6 +463,19 @@ public:
     {
         exceptions(std::ios_base::badbit);
     }
+    explicit ofstream(): detail::strict_fstream_holder< strict_fstream::ofstream >(), std::ostream(new ostreambuf(_fs.rdbuf())){}
+    void close() {
+        std::ostream::flush();
+        _fs.close();
+    }
+    void open(const std::string& filename, std::ios_base::openmode mode = std::ios_base::out, int level = Z_DEFAULT_COMPRESSION) {
+        flush();
+        _fs.open(filename, mode | std::ios_base::binary);
+        std::ostream::operator=(std::ostream(new ostreambuf(_fs.rdbuf(), ostreambuf::default_buff_size, level)));
+    }
+    bool is_open() const {
+        return _fs.is_open();
+    }
     ofstream& flush() {
         std::ostream::flush();
         _fs.flush();
@@ -459,7 +491,8 @@ public:
         std::ostream::flush();
         _fs.close();
     }
-    // Return the position within the compressed file
+
+    // Return the position within the compressed file (wrapped filestream)
     std::streampos compressed_tellp()
     {
         return _fs.tellp();

@@ -18,7 +18,11 @@ Alternatives to this library include:
 
 - The [[http://www.boost.org/doc/libs/release/libs/iostreams/][Boost IOStreams]] library. The library does not auto-detect input compression (by default, though that can be easily implemented with filters), and more importantly, it is not a header-only Boost library.
 
+- The [[https://github.com/tmaklin/bxzstr][bxzstr]] library, if you want support for BZ2 and/or LZMA as well.
+
 For an example usage, see [[examples/ztxtpipe.cpp]] and [[examples/zc.cpp]].
+
+It is compatible with [[https://github.com/richgel999/miniz][miniz]] in case you don't want to get frustrated with zlib e. g. on Windows.
 
 **** Input Auto-detection
 
