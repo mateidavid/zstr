@@ -1,11 +1,16 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(zstr)
 
-# zlib is required
-FIND_PACKAGE(ZLIB 1.2.3 REQUIRED)
-include_directories(BEFORE ${ZLIB_INCLUDE_DIRECTORIES})
-GET_FILENAME_COMPONENT(ZLIB_BASEPATH ${ZLIB_INCLUDE_DIRS} PATH)
-LINK_DIRECTORIES(${ZLIB_BASEPATH}/lib64 ${ZLIB_BASEPATH}/lib)
-MESSAGE("Adding ZLIB for ${PROJECT_NAME}: -I${ZLIB_INCLUDE_DIRS} and -L${ZLIB_BASEPATH}/lib64 -L${ZLIB_BASEPATH}/lib)")
+if(${CMAKE_VERSION} VERSION_LESS 3.13)
+  message(WARNING "Interface libraries are not well supported before cmake 3.13, you will need to include within the parent CMakeLists.txt: INCLUDE_DIRECTORIES(zstr/src)") 
+endif()
 
-include_directories(src)
+# zlib is required
+find_package(ZLIB 1.2.3 REQUIRED)
+
+add_library(zstr INTERFACE)
+target_include_directories(zstr INTERFACE src ${ZLIB_INCLUDE_DIRS})
+target_link_libraries(zstr INTERFACE ${ZLIB_LIBRARIES})
+
+message(STATUS "Adding zstr and ZLIB for ${PROJECT_NAME}: includes: ${CMAKE_CURRENT_SOURCE_DIR}/src ${ZLIB_INCLUDE_DIRS} and libraries: ${ZLIB_LIBRARIES}")
+
