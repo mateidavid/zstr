@@ -439,10 +439,6 @@ public:
         if (_fs.is_open()) close();
         if (rdbuf()) delete rdbuf();
     }
-    virtual void close()
-    {
-        _fs.close();
-    }
 
     /// Return the position within the compressed file (wrapped filestream)
     std::streampos compressed_tellg()
@@ -471,7 +467,7 @@ public:
     void open(const std::string& filename, std::ios_base::openmode mode = std::ios_base::out, int level = Z_DEFAULT_COMPRESSION) {
         flush();
         _fs.open(filename, mode | std::ios_base::binary);
-        std::ostream::operator=(std::ostream(new ostreambuf(_fs.rdbuf(), ostreambuf::default_buff_size, level)));
+        std::ostream::operator=(std::ostream(new ostreambuf(_fs.rdbuf(), default_buff_size, level)));
     }
     bool is_open() const {
         return _fs.is_open();
@@ -485,11 +481,6 @@ public:
     {
         if (_fs.is_open()) close();
         if (rdbuf()) delete rdbuf();
-    }
-    virtual void close()
-    {
-        std::ostream::flush();
-        _fs.close();
     }
 
     // Return the position within the compressed file (wrapped filestream)
