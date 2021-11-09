@@ -427,7 +427,7 @@ public:
     void close() {
         _fs.close();
     }
-    void open(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in) {
+    void open(const std::string filename, std::ios_base::openmode mode = std::ios_base::in) {
         _fs.open(filename, mode);
         std::istream::operator=(std::istream(new istreambuf(_fs.rdbuf())));
     }
@@ -452,7 +452,7 @@ class ofstream
       public std::ostream
 {
 public:
-    explicit ofstream(const std::string& filename, std::ios_base::openmode mode = std::ios_base::out,
+    explicit ofstream(const std::string filename, std::ios_base::openmode mode = std::ios_base::out,
                       int level = Z_DEFAULT_COMPRESSION, size_t buff_size = default_buff_size)
         : detail::strict_fstream_holder< strict_fstream::ofstream >(filename, mode | std::ios_base::binary),
           std::ostream(new ostreambuf(_fs.rdbuf(), buff_size, level))
@@ -464,7 +464,7 @@ public:
         std::ostream::flush();
         _fs.close();
     }
-    void open(const std::string& filename, std::ios_base::openmode mode = std::ios_base::out, int level = Z_DEFAULT_COMPRESSION) {
+    void open(const std::string filename, std::ios_base::openmode mode = std::ios_base::out, int level = Z_DEFAULT_COMPRESSION) {
         flush();
         _fs.open(filename, mode | std::ios_base::binary);
         std::ostream::operator=(std::ostream(new ostreambuf(_fs.rdbuf(), default_buff_size, level)));
