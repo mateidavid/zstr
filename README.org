@@ -10,6 +10,9 @@ For input access (decompression), the compression format is auto-detected, and m
 
 For output access (compression), the only parameter exposed by this API is the compression level.
 
+To add zstr within a CMake project, include this directory within your CMakeLists.txxt: 'add_subdirectory(zstr)' and include zstr for each required target when specifiying target_link_libraries. 
+  For cmake versions < 3.13, you will also need to 'include_directories(zstr/src)'
+
 Alternatives to this library include:
 
 - The original [[http://www.zlib.net/][ZLib]], through its [[http://www.zlib.net/manual.html][C API]]. This does not interact nicely with C++ iostreams.
