@@ -8,10 +8,9 @@ endif()
 
 if(${CMAKE_VERSION} VERSION_LESS 3.13)
   message(WARNING
-    "Interface libraries are not well supported before cmake 3.13, you will "
-    "need to manually add 'zstr/src' to your include directories. The simplest "
-    "way is to add the following line within the parent CMakeLists.txt:\n"
-    "include_directories(zstr/src)"
+    "Interface library targets are not well supported before cmake 3.13  .... "
+    "You may need to add \${ZSTR_INCLUDE_DIRS} to your include directories\n"
+    "target_include_directories(YourTarget PRIVATE \${ZSTR_INCLUDE_DIRS}) "
   )
 endif()
 
@@ -21,9 +20,13 @@ message(STATUS "zstr - found ZLIB (version: ${ZLIB_VERSION_STRING})")
 
 add_library(zstr INTERFACE)
 add_library(zstr::zstr ALIAS zstr)
-target_include_directories(zstr INTERFACE src)
+target_include_directories(zstr INTERFACE "${PROJECT_SOURCE_DIR}/src")
 target_link_libraries(zstr INTERFACE ZLIB::ZLIB)
 target_compile_features(zstr INTERFACE cxx_std_11) # require c++11 flag
+
+# NOTE: these vars are mostly useful to people using cmake < 3.13
+set(ZSTR_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src;${ZLIB_INCLUDE_DIRS}" CACHE PATH "" FORCE)
+set(ZSTR_LIBRARIES "${ZLIB_LIBRARIES}" CACHE PATH "" FORCE)
 
 
 message(STATUS
