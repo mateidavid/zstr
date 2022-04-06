@@ -20,8 +20,10 @@ find_package(ZLIB 1.2.3 REQUIRED) # defines imported target ZLIB::ZLIB
 message(STATUS "zstr - found ZLIB (version: ${ZLIB_VERSION_STRING})")
 
 add_library(zstr INTERFACE)
-target_include_directories(zstr INTERFACE src ${ZLIB_INCLUDE_DIRS})
-target_link_libraries(zstr INTERFACE ${ZLIB_LIBRARIES})
+add_library(zstr::zstr ALIAS zstr)
+target_include_directories(zstr INTERFACE src)
+target_link_libraries(zstr INTERFACE ZLIB::ZLIB)
+target_compile_features(zstr INTERFACE cxx_std_11) # require c++11 flag
 
 
 message(STATUS
