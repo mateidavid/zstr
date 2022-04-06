@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
-project(zstr)
+
+project(zstr LANGUAGES CXX)
+
+if (${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.12)
+  cmake_policy(SET CMP0074 NEW) # find_package uses <PackageName>_ROOT variables
+endif()
 
 if(${CMAKE_VERSION} VERSION_LESS 3.13)
   message(WARNING
