@@ -54,7 +54,7 @@ For all stream objects, the =badbit= of their expection mask is turned on in ord
 
 **** CMake
 
-There are two simple ways to add zstr to a CMake project.
+There are three simple ways to add zstr to a CMake project.
 
 Method 1. Add zstr as a subdirectory and link to the =zstr::zstr= target
 
@@ -81,6 +81,17 @@ Method 2. Fetch a copy of zstr from an external repository and link to the =zstr
 
     add_executable(YourTarget main.cpp)
     target_link_libraries(YourTarget PRIVATE zstr::zstr)
+  #+END_SRC
+
+Method 3. Add path containing 'zstr.hpp' to your target's include directories
+
+  /NOTE: With this method you're responsible for finding and linking to ZLIB !/
+
+  #+BEGIN_SRC cmake
+    find_package(ZLIB REQUIRED)
+    add_executable(YourTarget main.cpp)
+    target_link_libraries(YourTarget PRIVATE ZLIB::ZLIB)
+    target_include_directories(YourTarget PRIVATE /path/to/zstr/src)
   #+END_SRC
 
 **** License
