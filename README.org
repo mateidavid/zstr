@@ -94,6 +94,10 @@ Method 3. Add path containing 'zstr.hpp' to your target's include directories
     target_include_directories(YourTarget PRIVATE /path/to/zstr/src)
   #+END_SRC
 
+**** Requisites
+
+If you use GCC, you need to deploy at least version 5.1.
+
 **** License
 
 Released under the [[file:LICENSE][MIT license]].
