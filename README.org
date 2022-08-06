@@ -50,7 +50,7 @@ The package provides 6 classes for accessing ZLib streams:
 
 - =zstr::ofstream= is a wrapper for a =zstr::ostreambuf= that accesses an /internal/ =std::ofstream=. This can be used to open a file and write compressed data to it.
 
-For all stream objects, the =badbit= of their expection mask is turned on in order to propagate exceptions.
+For all stream objects, the =badbit= of their exception mask is turned on in order to propagate exceptions.
 
 **** CMake
 

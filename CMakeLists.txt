@@ -30,7 +30,7 @@ target_include_directories(zstr INTERFACE "${PROJECT_SOURCE_DIR}/src")
 target_link_libraries(zstr INTERFACE ZLIB::ZLIB)
 target_compile_features(zstr INTERFACE cxx_std_11) # require c++11 flag
 
-# -- set cache varibles
+# -- set cache variables
 
 # NOTE: these vars are mostly useful to people using cmake < 3.13
 set(ZSTR_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/src;${ZLIB_INCLUDE_DIRS}" CACHE PATH "" FORCE)

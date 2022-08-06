@@ -7,7 +7,7 @@
 void usage(std::ostream& os, const std::string& prog_name)
 {
     os << "Use: " << prog_name << " [-c] [-o output_file] files..." << std::endl
-       << "Synposis:" << std::endl
+       << "Synopsis:" << std::endl
        << "  Decompress (with `-c`, compress) files to stdout (with `-o`, to output_file)." << std::endl;
 }
 
