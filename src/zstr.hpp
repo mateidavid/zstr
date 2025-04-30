@@ -12,7 +12,11 @@
 #include <cstdint>
 #include <fstream>
 #include <sstream>
+#ifdef MINIZ
+#include <miniz.h>
+#else
 #include <zlib.h>
+#endif
 #include <memory>
 #include <iostream>
 #include "strict_fstream.hpp"
@@ -227,7 +231,13 @@ public:
                     // process return code
                     if (ret != Z_OK && ret != Z_STREAM_END) throw Exception(zstrm_p.get(), ret);
                     // update in&out pointers following inflate()
-                    in_buff_start = reinterpret_cast< decltype(in_buff_start) >(zstrm_p->next_in);
+                    in_buff_start = reinterpret_cast< decltype(in_buff_start) >(
+#ifdef MINIZ
+                        const_cast< unsigned char* >(zstrm_p->next_in)
+#else
+                        zstrm_p->next_in
+#endif
+                    );
                     in_buff_end = in_buff_start + zstrm_p->avail_in;
                     out_buff_free_start = reinterpret_cast< decltype(out_buff_free_start) >(zstrm_p->next_out);
                     assert(out_buff_free_start + zstrm_p->avail_out == out_buff.get() + buff_size);
