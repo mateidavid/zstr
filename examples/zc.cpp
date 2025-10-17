@@ -4,6 +4,11 @@
 #include <memory>
 #include "zstr.hpp"
 
+#ifdef _WIN32
+#include <io.h>     // for _setmode
+#include <fcntl.h>  // for _O_BINARY
+#endif
+
 void usage(std::ostream& os, const std::string& prog_name)
 {
     os << "Use: " << prog_name << " [-c] [-o output_file] files..." << std::endl
@@ -45,10 +50,18 @@ void decompress_files(const std::vector< std::string >& file_v, const std::strin
         //
         // If `f` is a file, create a zstr::ifstream, else (it is stdin) create a zstr::istream wrapper
         //
-        std::unique_ptr< std::istream > is_p =
+        std::unique_ptr<std::istream> is_p;
+#ifdef _WIN32
+        if (f != "-")
+            is_p.reset(new zstr::ifstream(f, std::ios::binary));
+        else
+            is_p.reset(new zstr::istream(std::cin));
+#else
+        is_p =
             (f != "-"
              ? std::unique_ptr< std::istream >(new zstr::ifstream(f))
              : std::unique_ptr< std::istream >(new zstr::istream(std::cin)));
+#endif
         //
         // Cat stream
         //
@@ -77,7 +90,11 @@ void compress_files(const std::vector< std::string >& file_v, const std::string&
         std::istream * is_p = &std::cin;
         if (f != "-")
         {
+#ifdef _WIN32
+            ifs_p = std::unique_ptr< std::ifstream >(new std::ifstream(f, std::ios::binary));
+#else
             ifs_p = std::unique_ptr< std::ifstream >(new strict_fstream::ifstream(f));
+#endif
             is_p = ifs_p.get();
         }
         //
@@ -89,6 +106,11 @@ void compress_files(const std::vector< std::string >& file_v, const std::string&
 
 int main(int argc, char * argv[])
 {
+#ifdef _WIN32
+	// Don't touch line endings
+    _setmode(_fileno(stdin), _O_BINARY);
+    _setmode(_fileno(stdout), _O_BINARY);
+#endif
     bool compress = false;
     std::string output_file;
     int c;
