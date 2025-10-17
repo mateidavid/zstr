@@ -2,8 +2,18 @@
 #include <string>
 #include "zstr.hpp"
 
+#ifdef _WIN32
+#include <io.h>     // for _setmode
+#include <fcntl.h>  // for _O_BINARY
+#endif
+
 int main()
 {
+#ifdef _WIN32
+	// Don't touch line endings
+    _setmode(_fileno(stdin), _O_BINARY);
+    _setmode(_fileno(stdout), _O_BINARY);
+#endif
     //
     // Create explicit zstr::streambuf feeding off the streambuf of std::cin.
     // This syntax allows for setting the buffer size and the auto-detect option.

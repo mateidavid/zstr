@@ -28,7 +28,10 @@ test: ztxtpipe zpipe zc
 	diff -q zc.cpp <(<zc.cpp gzip | ./zc)
 	diff -q zc.cpp <(<zc.cpp gzip | ./zc -)
 	diff -q zc.cpp <(<zc.cpp gzip | ./zc - -)
-	diff -q zc.cpp <(./zc <(<zc.cpp gzip))
+ifndef OS
+# Skip on windows because nested bash process substitution is not supported
+    diff -q zc.cpp <(./zc <(<zc.cpp gzip))
+endif
 	diff -q zc.cpp <(<zc.cpp ./zc -c | zcat)
 	diff -q zc.cpp <(<zc.cpp ./zc -c - | zcat)
 	diff -q zc.cpp <(<zc.cpp ./zc -c - - | zcat)
