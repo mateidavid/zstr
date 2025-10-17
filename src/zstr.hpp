@@ -19,6 +19,7 @@
 #endif
 #include <memory>
 #include <iostream>
+#include <cstdint>
 #include "strict_fstream.hpp"
 
 #if defined(__GNUC__) && !defined(__clang__)
@@ -173,6 +174,64 @@ public:
         return static_cast<long int>(zstrm_p->total_out - static_cast<uLong>(in_avail()));
     }
 
+    struct ZlibHeader {
+        // Based on RFC 1950 (https://datatracker.ietf.org/doc/html/rfc1950#section-2.2)
+        // See also:
+        // http://stackoverflow.com/questions/9050260/what-does-a-zlib-header-look-like
+
+        // 0 to 7, log2 of the windowSize in bytes
+        uint8_t cminfo;
+        // always 8, the compression method
+        uint8_t cm;
+        // 0 to 3, the compression level, higher is more compressed
+        uint8_t flevel;
+        // usually 0, true if a preset dictionary is provided after the header
+        bool fdict;
+        // 0 to 31, checksum: ((cminfo * 16 + cm) * 256 + flevel * 32 + fdict * 16 + fcheck) % 31 = 0
+        uint8_t fcheck;
+    private:
+        uint16_t total;
+
+    public:
+        ZlibHeader(const uint8_t cmf, const uint8_t flg) {
+            // the top 4 bits
+            cminfo = cmf >> 4;
+            // the bottom 4 bits
+            cm = cmf & 0xf;
+
+            // the top 2 bits
+            flevel = flg >> 6;
+            // the 3rd top bit
+            fdict = flg & 0x20;
+            // the bottom 5 bits
+            fcheck = flg & 0x10;
+
+            // reinterpret as integer in MSB order
+            total = cmf * 256 + flg;
+        }
+
+        [[nodiscard]] bool isValid() const noexcept {
+            return cm == 8 && total % 31 == 0;
+        }
+    };
+
+    static bool peak_header(const char* const buffer,const char* const end) {
+        // Buffer too short
+        if (buffer + 2 > end)
+            return false;
+
+        const auto b0  = static_cast<uint8_t>(buffer[0]);
+        const auto b1 = static_cast<uint8_t>(end[1]);
+
+        // Check for Gzip magic numbers
+        // http://en.wikipedia.org/wiki/Gzip
+        if (b0 == 0x1F && b1 == 0x8B)
+            return true;
+        if (ZlibHeader(b0, b1).isValid())
+            return true;
+        return false;
+    }
+
     std::streambuf::int_type underflow() override
     {
         if (this->gptr() == this->egptr())
@@ -199,16 +258,7 @@ public:
                 if (auto_detect && ! auto_detect_run)
                 {
                     auto_detect_run = true;
-                    unsigned char b0 = *reinterpret_cast< unsigned char * >(in_buff_start);
-                    unsigned char b1 = *reinterpret_cast< unsigned char * >(in_buff_start + 1);
-                    // Ref:
-                    // http://en.wikipedia.org/wiki/Gzip
-                    // http://stackoverflow.com/questions/9050260/what-does-a-zlib-header-look-like
-                    is_text = ! (in_buff_start + 2 <= in_buff_end
-                                 && ((b0 == 0x1F && b1 == 0x8B)         // gzip header
-                                     || (b0 == 0x78 && (b1 == 0x01      // zlib header
-                                                        || b1 == 0x9C
-                                                        || b1 == 0xDA))));
+                    is_text = peak_header(in_buff_start, in_buff_end);
                 }
                 if (is_text)
                 {
