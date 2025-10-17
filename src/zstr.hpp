@@ -487,7 +487,7 @@ public:
     void open(const std::string filename, std::ios_base::openmode mode = std::ios_base::out, int level = Z_DEFAULT_COMPRESSION) {
         flush();
         _fs.open(filename, mode | std::ios_base::binary);
-        std::ostream::operator=(std::ostream(new ostreambuf(_fs.rdbuf(), default_buff_size, level)));
+        rdbuf(new ostreambuf(_fs.rdbuf(), default_buff_size, level));
     }
     #endif
     bool is_open() const {
