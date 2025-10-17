@@ -114,13 +114,13 @@ namespace WindowBits {
         constexpr int SIZE_256_BYTES = 8;
         constexpr int MIN = SIZE_256_BYTES;
         constexpr int SIZE_512_BYTES = 9;
-        constexpr int SIZE_1024_BYTES = 10;
-        constexpr int SIZE_2048_BYTES = 11;
-        constexpr int SIZE_4096_BYTES = 12;
-        constexpr int SIZE_8192_BYTES = 13;
-        constexpr int SIZE_16384_BYTES = 14;
-        constexpr int SIZE_32768_BYTES = 15;
-        constexpr int MAX = SIZE_32768_BYTES;
+        constexpr int SIZE_1_KiB = 10;
+        constexpr int SIZE_2_KiB = 11;
+        constexpr int SIZE_4_KiB = 12;
+        constexpr int SIZE_8_KiB = 13;
+        constexpr int SIZE_16_KiB = 14;
+        constexpr int SIZE_32_KiB = 15;
+        constexpr int MAX = SIZE_32_KiB;
     } // namespace ZLIB
 
     // For use with older version: De-/InflateInit()
@@ -137,13 +137,13 @@ namespace WindowBits {
         constexpr int SIZE_256_BYTES = ZLIB::SIZE_256_BYTES + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
         constexpr int MIN = SIZE_256_BYTES;
         constexpr int SIZE_512_BYTES = ZLIB::SIZE_512_BYTES + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
-        constexpr int SIZE_1024_BYTES = ZLIB::SIZE_1024_BYTES + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
-        constexpr int SIZE_2048_BYTES = ZLIB::SIZE_2048_BYTES + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
-        constexpr int SIZE_4096_BYTES = ZLIB::SIZE_4096_BYTES + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
-        constexpr int SIZE_8192_BYTES = ZLIB::SIZE_8192_BYTES + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
-        constexpr int SIZE_16384_BYTES = ZLIB::SIZE_16384_BYTES + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
-        constexpr int SIZE_32768_BYTES = ZLIB::SIZE_32768_BYTES + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
-        constexpr int MAX = SIZE_32768_BYTES;
+        constexpr int SIZE_1_KiB =  ZLIB::SIZE_1_KiB + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int SIZE_2_KiB =  ZLIB::SIZE_2_KiB + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int SIZE_4_KiB =  ZLIB::SIZE_4_KiB + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int SIZE_8_KiB =  ZLIB::SIZE_8_KiB + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int SIZE_16_KiB = ZLIB::SIZE_16_KiB + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int SIZE_32_KiB = ZLIB::SIZE_32_KiB + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int MAX = SIZE_32_KiB;
     } // namespace GZIP
 
     constexpr int ADD_TO_ENABLE_GZIP = 32;
@@ -153,13 +153,13 @@ namespace WindowBits {
         constexpr int SIZE_256_BYTES = ZLIB::SIZE_256_BYTES + ADD_TO_ENABLE_GZIP;
         constexpr int MIN = SIZE_256_BYTES;
         constexpr int SIZE_512_BYTES = ZLIB::SIZE_512_BYTES + ADD_TO_ENABLE_GZIP;
-        constexpr int SIZE_1024_BYTES = ZLIB::SIZE_1024_BYTES + ADD_TO_ENABLE_GZIP;
-        constexpr int SIZE_2048_BYTES = ZLIB::SIZE_2048_BYTES + ADD_TO_ENABLE_GZIP;
-        constexpr int SIZE_4096_BYTES = ZLIB::SIZE_4096_BYTES + ADD_TO_ENABLE_GZIP;
-        constexpr int SIZE_8192_BYTES = ZLIB::SIZE_8192_BYTES + ADD_TO_ENABLE_GZIP;
-        constexpr int SIZE_16384_BYTES = ZLIB::SIZE_16384_BYTES + ADD_TO_ENABLE_GZIP;
-        constexpr int SIZE_32768_BYTES = ZLIB::SIZE_32768_BYTES + ADD_TO_ENABLE_GZIP;
-        constexpr int MAX = SIZE_32768_BYTES;
+        constexpr int SIZE_1_KiB =  ZLIB::SIZE_1_KiB + ADD_TO_ENABLE_GZIP;
+        constexpr int SIZE_2_KiB =  ZLIB::SIZE_2_KiB + ADD_TO_ENABLE_GZIP;
+        constexpr int SIZE_4_KiB =  ZLIB::SIZE_4_KiB + ADD_TO_ENABLE_GZIP;
+        constexpr int SIZE_8_KiB =  ZLIB::SIZE_8_KiB + ADD_TO_ENABLE_GZIP;
+        constexpr int SIZE_16_KiB = ZLIB::SIZE_16_KiB + ADD_TO_ENABLE_GZIP;
+        constexpr int SIZE_32_KiB = ZLIB::SIZE_32_KiB + ADD_TO_ENABLE_GZIP;
+        constexpr int MAX = SIZE_32_KiB;
     } // namespace ZLIB_OR_GZIP
 } // namespace WindowBits
 
