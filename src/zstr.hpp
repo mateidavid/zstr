@@ -89,6 +89,79 @@ public:
 
 namespace detail
 {
+namespace WindowBits {
+    /*
+     * Definitions for the valid values of the windowBits/windowSize parameter
+     *
+     * Based on the zlib manual (https://zlib.net/manual.html)
+     * See sections DeflateInit2 and InflateInit2
+     */
+
+    namespace Raw {
+        constexpr int RAW = -8;
+        constexpr int RAW1 = -9;
+        constexpr int RAW2 = -10;
+        constexpr int RAW3 = -11;
+        constexpr int RAW4 = -12;
+        constexpr int RAW5 = -13;
+        constexpr int RAW6 = -14;
+        constexpr int RAW7 = -15;
+    } // namespace RAW
+    constexpr int RAW = Raw::RAW;
+
+    namespace ZLIB {
+        constexpr int AUTO = 0;
+        constexpr int SIZE_256_BYTES = 8;
+        constexpr int MIN = SIZE_256_BYTES;
+        constexpr int SIZE_512_BYTES = 9;
+        constexpr int SIZE_1024_BYTES = 10;
+        constexpr int SIZE_2048_BYTES = 11;
+        constexpr int SIZE_4096_BYTES = 12;
+        constexpr int SIZE_8192_BYTES = 13;
+        constexpr int SIZE_16384_BYTES = 14;
+        constexpr int SIZE_32768_BYTES = 15;
+        constexpr int MAX = SIZE_32768_BYTES;
+    } // namespace ZLIB
+
+    // For use with older version: De-/InflateInit()
+    constexpr int DEFAULT_DEFLATE = ZLIB::MAX;
+    constexpr int DEFAULT_INFLATE = ZLIB::MAX;
+    // For use with current version: De-/InflateInit2()
+    constexpr int DEFAULT_DEFLATE2 = ZLIB::MIN;
+    constexpr int DEFAULT_INFLATE2 = ZLIB::MAX;
+
+    constexpr int ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB = 16;
+
+    namespace GZIP {
+        constexpr int SIZE_AUTO = ZLIB::AUTO + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int SIZE_256_BYTES = ZLIB::SIZE_256_BYTES + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int MIN = SIZE_256_BYTES;
+        constexpr int SIZE_512_BYTES = ZLIB::SIZE_512_BYTES + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int SIZE_1024_BYTES = ZLIB::SIZE_1024_BYTES + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int SIZE_2048_BYTES = ZLIB::SIZE_2048_BYTES + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int SIZE_4096_BYTES = ZLIB::SIZE_4096_BYTES + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int SIZE_8192_BYTES = ZLIB::SIZE_8192_BYTES + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int SIZE_16384_BYTES = ZLIB::SIZE_16384_BYTES + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int SIZE_32768_BYTES = ZLIB::SIZE_32768_BYTES + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int MAX = SIZE_32768_BYTES;
+    } // namespace GZIP
+
+    constexpr int ADD_TO_ENABLE_GZIP = 32;
+
+    namespace ZLIB_OR_GZIP {
+        constexpr int SIZE_AUTO = ZLIB::AUTO + ADD_TO_ENABLE_GZIP;
+        constexpr int SIZE_256_BYTES = ZLIB::SIZE_256_BYTES + ADD_TO_ENABLE_GZIP;
+        constexpr int MIN = SIZE_256_BYTES;
+        constexpr int SIZE_512_BYTES = ZLIB::SIZE_512_BYTES + ADD_TO_ENABLE_GZIP;
+        constexpr int SIZE_1024_BYTES = ZLIB::SIZE_1024_BYTES + ADD_TO_ENABLE_GZIP;
+        constexpr int SIZE_2048_BYTES = ZLIB::SIZE_2048_BYTES + ADD_TO_ENABLE_GZIP;
+        constexpr int SIZE_4096_BYTES = ZLIB::SIZE_4096_BYTES + ADD_TO_ENABLE_GZIP;
+        constexpr int SIZE_8192_BYTES = ZLIB::SIZE_8192_BYTES + ADD_TO_ENABLE_GZIP;
+        constexpr int SIZE_16384_BYTES = ZLIB::SIZE_16384_BYTES + ADD_TO_ENABLE_GZIP;
+        constexpr int SIZE_32768_BYTES = ZLIB::SIZE_32768_BYTES + ADD_TO_ENABLE_GZIP;
+        constexpr int MAX = SIZE_32768_BYTES;
+    } // namespace ZLIB_OR_GZIP
+} // namespace WindowBits
 
 class z_stream_wrapper
     : public z_stream
@@ -105,11 +178,11 @@ public:
         {
             this->avail_in = 0;
             this->next_in = nullptr;//Z_NULL
-            ret = inflateInit2(this, _window_bits ? _window_bits : 15+32);
+            ret = inflateInit2(this, _window_bits ? _window_bits : WindowBits::ZLIB_OR_GZIP::MAX);
         }
         else
         {
-            ret = deflateInit2(this, _level, Z_DEFLATED, _window_bits ? _window_bits : 15+16, 8, Z_DEFAULT_STRATEGY);
+            ret = deflateInit2(this, _level, Z_DEFLATED, _window_bits ? _window_bits : WindowBits::GZIP::MAX, 8, Z_DEFAULT_STRATEGY);
         }
         if (ret != Z_OK) throw Exception(this, ret);
     }
