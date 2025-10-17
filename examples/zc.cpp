@@ -50,7 +50,7 @@ void decompress_files(const std::vector< std::string >& file_v, const std::strin
         //
         // If `f` is a file, create a zstr::ifstream, else (it is stdin) create a zstr::istream wrapper
         //
-        std::unique_ptr<std::istream> is_p =
+        std::unique_ptr< std::istream > is_p =
             (f != "-"
              ? std::unique_ptr< std::istream >(new zstr::ifstream(f, std::ios::binary))
              : std::unique_ptr< std::istream >(new zstr::istream(std::cin)));
