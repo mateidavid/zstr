@@ -4,7 +4,7 @@
 
 #ifdef _WIN32
 #include <io.h>     // for _setmode
-#include <fcntl.h>  // for _O_BINARY and _O_TEXT
+#include <fcntl.h>  // for _O_BINARY
 #endif
 
 int main()
