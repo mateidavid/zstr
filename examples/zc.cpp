@@ -90,11 +90,7 @@ void compress_files(const std::vector< std::string >& file_v, const std::string&
         std::istream * is_p = &std::cin;
         if (f != "-")
         {
-#ifdef _WIN32
-            ifs_p = std::unique_ptr< std::ifstream >(new std::ifstream(f, std::ios::binary));
-#else
-            ifs_p = std::unique_ptr< std::ifstream >(new strict_fstream::ifstream(f));
-#endif
+            ifs_p = std::unique_ptr< std::ifstream >(new strict_fstream::ifstream(f, std::ios::binary));
             is_p = ifs_p.get();
         }
         //
