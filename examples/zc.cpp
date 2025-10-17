@@ -54,7 +54,7 @@ void decompress_files(const std::vector< std::string >& file_v, const std::strin
             (f != "-"
              ? std::unique_ptr< std::istream >(new zstr::ifstream(f
 #ifdef _WIN32
-				, std::ios::binary
+				, std::ios::in | std::ios::binary
 #endif
 				))
              : std::unique_ptr< std::istream >(new zstr::istream(std::cin)));
@@ -88,7 +88,7 @@ void compress_files(const std::vector< std::string >& file_v, const std::string&
         {
             ifs_p = std::unique_ptr< std::ifstream >(new strict_fstream::ifstream(f
 #ifdef _WIN32
-				, std::ios::binary
+				, std::ios::in | std::ios::binary
 #endif
 			));
             is_p = ifs_p.get();
