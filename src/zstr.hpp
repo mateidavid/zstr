@@ -19,8 +19,6 @@
 #endif
 #include <memory>
 #include <iostream>
-#include <cstdint>
-#include <iomanip>
 #include "strict_fstream.hpp"
 
 #if defined(__GNUC__) && !defined(__clang__)
