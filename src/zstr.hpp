@@ -20,6 +20,7 @@
 #include <memory>
 #include <iostream>
 #include <cstdint>
+#include <iomanip>
 #include "strict_fstream.hpp"
 
 #if defined(__GNUC__) && !defined(__clang__)
@@ -221,7 +222,7 @@ public:
             return false;
 
         const auto b0  = static_cast<uint8_t>(buffer[0]);
-        const auto b1 = static_cast<uint8_t>(end[1]);
+        const auto b1 = static_cast<uint8_t>(buffer[1]);
 
         // Check for Gzip magic numbers
         // http://en.wikipedia.org/wiki/Gzip
