@@ -282,9 +282,12 @@ public:
           in_buff(),
           out_buff(),
           zstrm_p(new detail::z_stream_wrapper(false, _level, _window_bits)),
-          buff_size(_buff_size)
+          buff_size(_buff_size),
+          compress(_level != Z_NO_COMPRESSION)
     {
         assert(sbuf_p);
+        if (!compress)
+            return;
         in_buff = std::unique_ptr<char[]>(new char[buff_size]);
         out_buff = std::unique_ptr<char[]>(new char[buff_size]);
         setp(in_buff.get(), in_buff.get() + buff_size);
@@ -328,12 +331,19 @@ public:
         // close the ofstream with an explicit call to close(), and do not rely
         // on the implicit call in the destructor.
         //
-        if (!failed) try {
+        if (!failed && compress) try {
             sync();
         } catch (...) {}
     }
     std::streambuf::int_type overflow(std::streambuf::int_type c = traits_type::eof()) override
     {
+        if (!compress)
+        {
+            if (!traits_type::eq_int_type(c, traits_type::eof()))
+                return sbuf_p->sputc(char_type(c));
+            return traits_type::not_eof(c);
+        }
+
         zstrm_p->next_in = reinterpret_cast< decltype(zstrm_p->next_in) >(pbase());
         zstrm_p->avail_in = uint32_t(pptr() - pbase());
         while (zstrm_p->avail_in > 0)
@@ -350,6 +360,9 @@ public:
     }
     int sync() override
     {
+        if (!compress)
+            return sbuf_p->pubsync();
+
         // first, call overflow to clear in_buff
         overflow();
         if (! pptr()) return -1;
@@ -367,6 +380,7 @@ private:
     std::unique_ptr<detail::z_stream_wrapper> zstrm_p;
     std::size_t buff_size;
     bool failed = false;
+    bool compress;
 
 }; // class ostreambuf
 
