@@ -89,6 +89,79 @@ public:
 
 namespace detail
 {
+namespace WindowBits {
+    /*
+     * Definitions for the valid values of the windowBits/windowSize parameter
+     *
+     * Based on the zlib manual (https://zlib.net/manual.html)
+     * See sections DeflateInit2 and InflateInit2
+     */
+
+    namespace Raw {
+        constexpr int RAW = -8;
+        constexpr int RAW1 = -9;
+        constexpr int RAW2 = -10;
+        constexpr int RAW3 = -11;
+        constexpr int RAW4 = -12;
+        constexpr int RAW5 = -13;
+        constexpr int RAW6 = -14;
+        constexpr int RAW7 = -15;
+    } // namespace RAW
+    constexpr int RAW = Raw::RAW;
+
+    namespace ZLIB {
+        constexpr int AUTO = 0;
+        constexpr int _256B = 8;
+        constexpr int MIN = _256B;
+        constexpr int _512B = 9;
+        constexpr int _1KiB = 10;
+        constexpr int _2KiB = 11;
+        constexpr int _4KiB = 12;
+        constexpr int _8KiB = 13;
+        constexpr int _16KiB = 14;
+        constexpr int _32KiB = 15;
+        constexpr int MAX = _32KiB;
+    } // namespace ZLIB
+
+    // For use with older version: De-/InflateInit()
+    constexpr int DEFAULT_DEFLATE = ZLIB::MAX;
+    constexpr int DEFAULT_INFLATE = ZLIB::MAX;
+    // For use with current version: De-/InflateInit2()
+    constexpr int DEFAULT_DEFLATE2 = ZLIB::MIN;
+    constexpr int DEFAULT_INFLATE2 = ZLIB::MAX;
+
+    constexpr int ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB = 16;
+
+    namespace GZIP {
+        constexpr int AUTO = ZLIB::AUTO + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int _256B = ZLIB::_256B + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int MIN = _256B;
+        constexpr int _512B = ZLIB::_512B + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int _1KiB =  ZLIB::_1KiB + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int _2KiB =  ZLIB::_2KiB + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int _4KiB =  ZLIB::_4KiB + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int _8KiB =  ZLIB::_8KiB + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int _16KiB = ZLIB::_16KiB + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int _32KiB = ZLIB::_32KiB + ADD_TO_ENABLE_GZIP_AND_DISABLE_ZLIB;
+        constexpr int MAX = _32KiB;
+    } // namespace GZIP
+
+    constexpr int ADD_TO_ENABLE_GZIP = 32;
+
+    namespace ZLIB_OR_GZIP {
+        constexpr int AUTO = ZLIB::AUTO + ADD_TO_ENABLE_GZIP;
+        constexpr int _256B = ZLIB::_256B + ADD_TO_ENABLE_GZIP;
+        constexpr int MIN = _256B;
+        constexpr int _512B = ZLIB::_512B + ADD_TO_ENABLE_GZIP;
+        constexpr int _1KiB =  ZLIB::_1KiB + ADD_TO_ENABLE_GZIP;
+        constexpr int _2KiB =  ZLIB::_2KiB + ADD_TO_ENABLE_GZIP;
+        constexpr int _4KiB =  ZLIB::_4KiB + ADD_TO_ENABLE_GZIP;
+        constexpr int _8KiB =  ZLIB::_8KiB + ADD_TO_ENABLE_GZIP;
+        constexpr int _16KiB = ZLIB::_16KiB + ADD_TO_ENABLE_GZIP;
+        constexpr int _32KiB = ZLIB::_32KiB + ADD_TO_ENABLE_GZIP;
+        constexpr int MAX = _32KiB;
+    } // namespace ZLIB_OR_GZIP
+} // namespace WindowBits
 
 class z_stream_wrapper
     : public z_stream
@@ -105,11 +178,11 @@ public:
         {
             this->avail_in = 0;
             this->next_in = nullptr;//Z_NULL
-            ret = inflateInit2(this, _window_bits ? _window_bits : 15+32);
+            ret = inflateInit2(this, _window_bits ? _window_bits : WindowBits::ZLIB_OR_GZIP::MAX);
         }
         else
         {
-            ret = deflateInit2(this, _level, Z_DEFLATED, _window_bits ? _window_bits : 15+16, 8, Z_DEFAULT_STRATEGY);
+            ret = deflateInit2(this, _level, Z_DEFLATED, _window_bits ? _window_bits : WindowBits::GZIP::MAX, 8, Z_DEFAULT_STRATEGY);
         }
         if (ret != Z_OK) throw Exception(this, ret);
     }
