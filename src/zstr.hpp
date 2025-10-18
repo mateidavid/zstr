@@ -215,7 +215,7 @@ public:
         }
     };
 
-    static bool peak_header(const char* const buffer,const char* const end) {
+    static bool peek_header(const char* const buffer,const char* const end) {
         // Buffer too short
         if (buffer + 2 > end)
             return false;
@@ -258,7 +258,7 @@ public:
                 if (auto_detect && ! auto_detect_run)
                 {
                     auto_detect_run = true;
-                    is_text = peak_header(in_buff_start, in_buff_end);
+                    is_text = peek_header(in_buff_start, in_buff_end);
                 }
                 if (is_text)
                 {
