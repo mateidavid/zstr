@@ -265,21 +265,21 @@ public:
         uint16_t total;
 
     public:
-        ZlibHeader(const uint8_t cmf, const uint8_t flg) {
+        ZlibHeader(const unsigned int cmf, const unsigned int flg) {
             // the top 4 bits
-            cminfo = cmf >> 4;
+            cminfo = static_cast<uint8_t>(cmf >> 4);
             // the bottom 4 bits
             cm = cmf & 0xf;
 
             // the top 2 bits
-            flevel = flg >> 6;
+            flevel = static_cast<uint8_t>(flg >> 6);
             // the 3rd top bit
             fdict = flg & 0x20;
             // the bottom 5 bits
             fcheck = flg & 0x1f;
 
             // reinterpret as integer in MSB order
-            total = cmf * 256 + flg;
+            total = static_cast<uint16_t>(cmf * 256u + flg);
         }
 
         [[nodiscard]] bool isValid() const noexcept {
