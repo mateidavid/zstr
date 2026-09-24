@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
-project(zstr LANGUAGES CXX)
+project(zstr VERSION 1.2.0 LANGUAGES CXX)
 
 # -- locate zlib
 
