@@ -283,7 +283,7 @@ public:
         }
 
         [[nodiscard]] bool isValid() const noexcept {
-            return cm == 8 && total % 31 == 0;
+            return cm == 8 && cminfo < 8 && total % 31 == 0 ;
         }
     };
 
