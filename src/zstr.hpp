@@ -330,7 +330,48 @@ public:
                 if (auto_detect && ! auto_detect_run)
                 {
                     auto_detect_run = true;
-                    is_text = !is_compressed(in_buff_start, in_buff_end);
+                    if (!is_compressed(in_buff_start, in_buff_end))
+                    {
+                        is_text = true;
+		    }
+                    else
+                    {
+                        // Try inflate() on the initial buffer to catch spurious zlib header matches
+                        zstrm_p = std::unique_ptr<detail::z_stream_wrapper>(new detail::z_stream_wrapper(true, Z_DEFAULT_COMPRESSION, window_bits));
+                        zstrm_p->next_in = reinterpret_cast< decltype(zstrm_p->next_in) >(in_buff_start);
+                        zstrm_p->avail_in = uint32_t(in_buff_end - in_buff_start);
+                        zstrm_p->next_out = reinterpret_cast< decltype(zstrm_p->next_out) >(out_buff_free_start);
+                        zstrm_p->avail_out = uint32_t((out_buff.get() + buff_size) - out_buff_free_start);
+                        int ret = inflate(zstrm_p.get(), Z_NO_FLUSH);
+                        if (ret == Z_OK || ret == Z_STREAM_END)
+                        {
+                            in_buff_start = reinterpret_cast< decltype(in_buff_start) >(
+#ifdef MINIZ
+                                const_cast< unsigned char* >(zstrm_p->next_in);
+#else
+                                zstrm_p->next_in
+#endif
+                            );
+                            in_buff_end = in_buff_start + zstrm_p->avail_in;
+                            out_buff_free_start = reinterpret_cast< decltype(out_buff_free_start) >(zstrm_p->next_out);
+                            assert(out_buff_free_start + zstrm_p->avail_out == out_buff.get() + buff_size);
+
+                            if (ret == Z_STREAM_END) {
+                                // if stream ended, deallocate inflator
+                                zstrm_p.reset();
+                            }
+                            continue;
+                        }
+                        else if (ret == Z_DATA_ERROR || ret == Z_NEED_DICT)
+                        {
+                            zstrm_p.reset();
+                            is_text = true;
+                        }
+                        else
+                        {
+                            throw Exception(zstrm_p.get(), ret);
+                        }
+                    }
                 }
                 if (is_text)
                 {
