@@ -208,7 +208,7 @@ class istreambuf
 {
 public:
     istreambuf(std::streambuf * _sbuf_p,
-               std::size_t _buff_size = default_buff_size, bool _auto_detect = true, int _window_bits = 0)
+               std::size_t _buff_size = default_buff_size, bool _auto_detect = true, int _window_bits = 0, bool _is_text = false)
         : sbuf_p(_sbuf_p),
           in_buff(),
           in_buff_start(nullptr),
@@ -218,7 +218,7 @@ public:
           buff_size(_buff_size),
           auto_detect(_auto_detect),
           auto_detect_run(false),
-          is_text(false),
+          is_text(_is_text),
           window_bits(_window_bits)
     {
         assert(sbuf_p);
@@ -326,8 +326,8 @@ public:
                     in_buff_end = in_buff_start + sz;
                     if (in_buff_end == in_buff_start) break; // end of input
                 }
-                // auto detect if the stream contains text or deflate data
-                if (auto_detect && ! auto_detect_run)
+                // auto detect if the stream contains text or deflate data, and is_text is default value (false)
+                if (auto_detect && ! auto_detect_run && ! is_text)
                 {
                     auto_detect_run = true;
                     is_text = !is_compressed(in_buff_start, in_buff_end);
